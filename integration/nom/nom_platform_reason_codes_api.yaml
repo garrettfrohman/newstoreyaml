@@ -1,0 +1,227 @@
+openapi: 3.0.0
+paths:
+  /reason_code_types/{type}/reason_codes:
+    get:
+      operationId: ReasonCodesController_getReasonCodes
+      summary: Get reason codes by type and tenant
+      description: Retrieves all the reason codes of the provided reason code type.
+      parameters:
+        - name: tenant
+          in: header
+          description: Tenant name
+          schema:
+            type: string
+        - name: type
+          required: true
+          in: path
+          schema:
+            type: string
+            enum:
+              - returns
+              - cancellations
+              - refunds
+              - exchanges
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReasonCodeResponse'
+        '403':
+          description: Access Denied
+        '500':
+          description: ''
+      tags:
+        - Reason Codes
+    post:
+      operationId: ReasonCodesController_create
+      summary: Create reason code
+      description: >-
+        Creates a new reason code in the provided reason code type. Once a
+        reason code is added, users must log out from their app and log in again
+        to see the new reason codes.
+      parameters:
+        - name: tenant
+          in: header
+          description: Tenant name
+          schema:
+            type: string
+        - name: type
+          required: true
+          in: path
+          schema:
+            type: string
+            enum:
+              - returns
+              - cancellations
+              - refunds
+              - exchanges
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonCodeDto'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReasonCode'
+        '403':
+          description: Access Denied
+        '409':
+          description: Reason Code already exists
+        '500':
+          description: ''
+      tags:
+        - Reason Codes
+      security:
+        - bearer: []
+  /reason_code_types/{type}/reason_codes/{code}:
+    put:
+      operationId: ReasonCodesController_update
+      summary: Update reason code
+      description: Updates the provided reason code.
+      parameters:
+        - name: tenant
+          in: header
+          description: Tenant name
+          schema:
+            type: string
+        - name: type
+          required: true
+          in: path
+          schema:
+            type: string
+            enum:
+              - returns
+              - cancellations
+              - refunds
+              - exchanges
+        - name: code
+          required: true
+          in: path
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonCodeDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReasonCode'
+        '400':
+          description: ''
+        '403':
+          description: Access Denied
+        '404':
+          description: Reason Code not found
+      tags:
+        - Reason Codes
+      security:
+        - bearer: []
+    delete:
+      operationId: ReasonCodesController_delete
+      summary: Delete reason code
+      description: Deletes the provided reason code.
+      parameters:
+        - name: tenant
+          in: header
+          description: Tenant name
+          schema:
+            type: string
+        - name: type
+          required: true
+          in: path
+          schema:
+            type: string
+            enum:
+              - returns
+              - cancellations
+              - refunds
+              - exchanges
+        - name: code
+          required: true
+          in: path
+          schema:
+            type: number
+      responses:
+        '200':
+          description: ''
+        '204':
+          description: ''
+        '403':
+          description: Access Denied
+        '404':
+          description: Reason Code not found
+      tags:
+        - Reason Codes
+info:
+  title: Reason Codes
+  description: Reason Codes Api
+  version: '2.0'
+  contact: {}
+tags:
+  - name: Reason Codes
+    description: Reason Codes Api
+servers:
+  - url: https://dodici.s.newstore.net/api/v1/org/config
+components:
+  schemas:
+    Reason:
+      type: object
+      properties: {}
+    ReasonCode:
+      type: object
+      properties:
+        code:
+          type: number
+        created_at:
+          type: string
+        created_by:
+          type: string
+        updated_at:
+          type: string
+        updated_by:
+          type: string
+        reason:
+          $ref: '#/components/schemas/Reason'
+      required:
+        - code
+        - created_at
+        - created_by
+        - updated_at
+        - updated_by
+        - reason
+    ReasonCodeResponse:
+      type: object
+      properties:
+        metadata:
+          type: object
+        reason_codes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReasonCode'
+      required:
+        - metadata
+        - reason_codes
+    ReasonCodeDto:
+      type: object
+      properties:
+        code:
+          type: number
+          description: The unique code of the reason for a specific type.
+        reason:
+          $ref: '#/components/schemas/Reason'
+      required:
+        - code
+        - reason

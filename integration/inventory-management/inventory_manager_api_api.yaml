@@ -1,0 +1,1170 @@
+openapi: 3.0.0
+info:
+  title: Inventory Manager API
+  version: '0'
+  description: |
+    Represents the store's inventory management operations and stock on hand.
+
+    This resource contains the following sub-resources:
+
+    - `receiving_transactions`: Represents a receiving transaction of inventory in the store.
+    - `count_tasks`: Represents a count task to count stock in the store.
+    - `transfer_shipping_config`: Represents a shipping configuration used to ship inventory being
+      transferred from the store.
+    - `adjustments`: Represents adjustment transactions in the store. Use this sub-resource to
+      adjust store inventory for reasons such as theft, damage, or return of items after repair.
+    - `adjustment_reasons`: Represents adjustment reasons that associates can select on NewStore
+      Fulfillment App, when adjusting inventory in the store.
+servers:
+  - url: 'https://dodici.x.newstore.net/v0/i'
+paths:
+  '/inventory/receiving_transactions/{id}':
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+        description: The identifier for the receiving transaction.
+  '/inventory/stores/{id}/receiving_transactions':
+    post:
+      responses:
+        '201':
+          description: The transaction was successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/receiving_transaction_full_product'
+        '400':
+          description: Something is wrong with the request.
+        '404':
+          description: The store is not found.
+        '500':
+          description: An internal error occurred.
+      description: |
+        Creates a receiving transaction using an ASN or order reference.
+      operationId: createReceivingTransaction
+      summary: Create receiving transaction
+      requestBody:
+        content:
+          application/json:
+            example:
+              asn_id: 89d9456c-d26c-4c32-8304-8ef41020c4e2
+            schema:
+              $ref: '#/components/schemas/start_receiving_transaction_request'
+        required: true
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: >
+          The identifier for the store. Use the
+
+          [List stores
+          method](/newstore-cloud/store_operations/store.html#operation/listStores)
+          to get the ID.
+  '/inventory/stores/{id}/count_tasks':
+    get:
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                example:
+                  count_tasks:
+                    - id: aebd33439ed343b788170e0815dfb9a6
+                      fulfillment_node_id: DC01
+                      due_date: '2019-04-12'
+                      status: pending
+                      line_item_count: 11
+                      associate: null
+                    - id: aebd33439ed343b788170e0815dfb9a6
+                      fulfillment_node_id: US02
+                      due_date: '2019-04-23'
+                      stock_location: damaged
+                      status: in_progress
+                      line_item_count: 5
+                      associate:
+                        id: 3045c2140d2e4a5ba0f2ddc0a27d8798
+                        first_name: First
+                        last_name: Last
+                $ref: '#/components/schemas/get_count_tasks_response'
+        '400':
+          description: Something is wrong with the request.
+        '404':
+          description: The store is not found.
+        '500':
+          description: An internal error occurred.
+      description: |
+        Retrieves count tasks for the specified store.
+      operationId: listCountTasksByStore
+      summary: List count tasks by store
+      parameters:
+        - name: status
+          in: query
+          description: The status list to filter the count tasks.
+          schema:
+            type: array
+            items:
+              type: string
+    post:
+      responses:
+        '201':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                $ref: '#/components/schemas/create_count_task_response'
+        '400':
+          description: Something is wrong with the request.
+        '404':
+          description: The store is not found.
+        '409':
+          description: The task already exists.
+        '500':
+          description: An internal error occurred.
+      description: >
+        Creates a count task for the specified store.
+
+
+        If you use NewStore as [inventory
+        master](/docs/glossary.html#term-inventory-master) for your business,
+
+        use this method to create a count task to count the items in a specific
+
+        [stock location](/docs/glossary.html#term-stock-location).
+
+
+        For more information on:
+         - Using NewStore as inventory master in the store, see
+           [Enabling a location as inventory master](/newstore-cloud/order_management/location.html#operation/enable-location-as-inventory-master).
+         - Managing stock locations in your business, see [Stock locations](/newstore-cloud/inventory/stock_locations.html).
+      operationId: createCountTask
+      summary: Create count task
+      requestBody:
+        content:
+          application/json:
+            example:
+              due_date: '2019-01-20'
+              product_ids:
+                - '1000101'
+                - '1000102'
+                - '1000103'
+              external_id: '10000011'
+              stock_location: main
+            schema:
+              $ref: '#/components/schemas/create_count_task_request'
+        required: true
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: >
+          The identifier for the store. Use the
+
+          [List stores
+          method](/newstore-cloud/store_operations/store.html#operation/listStores)
+          to get the ID.
+  /inventory/transfer_shipping_config:
+    get:
+      responses:
+        '200':
+          description: |
+            Successful response.
+          content:
+            application/json:
+              schema:
+                example:
+                  transfer_shipping_configuration:
+                    - from_location_id: ST01
+                      to_location_ids:
+                        - ST02
+                        - ST03
+                        - ST04
+                        - ST05
+                        - ST06
+                      service_level_ids:
+                        - GROUND
+                        - IN_STORE_PICKUP_US01
+                        - 2_DAY
+                        - SAME_DAY_DELIVERY
+                    - from_location_id: ST02
+                      to_location_ids:
+                        - '*'
+                      service_level_ids:
+                        - GROUND
+                        - IN_STORE_PICKUP_US01
+                        - 2_DAY
+                        - SAME_DAY_DELIVERY
+                  revision: 3
+                  updated_at: '2018-07-16T09:05:42.13Z'
+                $ref: '#/components/schemas/transfer_shipping_configuration_response'
+        '500':
+          description: An internal error occurred.
+      description: >
+        Retrieves the transfer shipping configuration set up for your business.
+
+
+        The response includes the transfer shipping configuration with a list of
+        shipping routes and the service
+
+        levels configured for each route.
+      operationId: getTransferShippingConfiguration
+      summary: Get transfer shipping configuration
+    post:
+      responses:
+        '200':
+          description: |
+            The transfer shipping configuration was updated successfully.
+          content:
+            application/json:
+              schema:
+                example:
+                  transfer_shipping_configuration:
+                    - from_location_id: ST01
+                      to_location_ids:
+                        - ST02
+                        - ST03
+                        - ST04
+                        - ST05
+                        - ST06
+                      service_level_ids:
+                        - GROUND
+                        - IN_STORE_PICKUP_US01
+                        - 2_DAY
+                        - SAME_DAY_DELIVERY
+                    - from_location_id: ST02
+                      to_location_ids:
+                        - '*'
+                      service_level_ids:
+                        - GROUND
+                        - IN_STORE_PICKUP_US01
+                        - 2_DAY
+                        - SAME_DAY_DELIVERY
+                  revision: 3
+                  updated_at: '2018-07-16T09:05:42.13Z'
+                $ref: '#/components/schemas/transfer_shipping_configuration_response'
+        '400':
+          description: >
+            An invalid config was uploaded. Check the response body for the
+            error message describing the validation error.
+          content:
+            application/json:
+              schema:
+                required:
+                  - error_code
+                  - message
+                example:
+                  error_code: invalid_data
+                  message: 'missing fields: [''transfer_shipping_configuration'']'
+                $ref: >-
+                  #/components/schemas/transfer_shipping_configuration_response_400
+                type: object
+                properties:
+                  error_code:
+                    minLength: 1
+                    description: A code describing the error.
+                    type: string
+                  message:
+                    description: A human-readable error message.
+                    type: string
+        '500':
+          description: An internal error occurred.
+      description: >
+        Creates or updates a transfer shipping configuration, used for shipping
+        transfer orders.
+
+        A transfer order is used to send inventory from a store to another
+        location (DC or store).
+
+
+        When you update the configuration using this method, the response body
+        contains the revision of the configuration.
+
+
+        The values of the `from_location_id` and `to_location_ids` properties in
+        the schema
+
+        are set during the first [stock import](/newstore-cloud/catalog/import-api.html#operation/stock).
+
+
+        The transfer configuration is related to the [fulfillment
+        configuration](#fulfillment-configuration). The
+
+        service levels (`service_level_ids`) you use in the transfer
+        configuration:
+
+
+        - Must be present in your fulfillment configuration.
+
+        - Have the **same** service level priority as in the fulfillment
+        configuration.
+
+
+        For a complete example, see
+
+        [Tutorial: Setting up a transfer
+        configuration](/docs/development/tutorials/transfer-config.html).
+      operationId: createOrUpdateTransferShippingConfiguration
+      summary: Create or update transfer shipping configuration
+      requestBody:
+        content:
+          application/json:
+            example:
+              transfer_shipping_configuration:
+                - from_location_id: ST01
+                  to_location_ids:
+                    - ST02
+                    - ST03
+                    - ST04
+                    - ST05
+                    - ST06
+                  service_level_ids:
+                    - IN_STORE_PICKUP_US01
+                    - 2_DAY
+                    - GROUND
+                    - SAME_DAY_DELIVERY
+                - from_location_id: ST02
+                  to_location_ids:
+                    - '*'
+                  service_level_ids:
+                    - IN_STORE_PICKUP_US01
+                    - 2_DAY
+                    - GROUND
+                    - SAME_DAY_DELIVERY
+            schema:
+              $ref: '#/components/schemas/transfer_shipping_configuration'
+        required: true
+  /inventory/adjustments:
+    post:
+      responses:
+        '201':
+          description: The adjustment was successfully created.
+          content:
+            application/json:
+              example:
+                id: 9608f483-3827-46a1-a92c-abe924f8f4d0
+                created_at: '2019-06-26T12:50:50.648002Z'
+                updated_at: '2019-06-26T12:50:50.648002Z'
+                associate_by: ec447e57-02a3-4ba2-a35d-7495beb72944
+                line_items:
+                  - product_id: '1200001'
+                    quantity: 3
+                revision: 1
+                status: open
+                line_item_count: 1
+                total_unit_count: 3
+                reason:
+                  type: Damage out
+                  subtype: Stained
+                note: I spilled my coffee on it
+              schema:
+                $ref: '#/components/schemas/inject_adjustment_response'
+        '400':
+          description: Something is wrong with the request.
+        '404':
+          description: The store was not found.
+        '500':
+          description: An internal error occurred.
+      description: Creates an [adjustment](/docs/glossary.html#term-adjustment) for the specific location.
+      operationId: createAdjustment
+      summary: Create adjustment
+      requestBody:
+        content:
+          application/json:
+            example:
+              fulfillment_node_id: US01
+              line_items:
+                - product_id: '1200001'
+                  quantity: 3
+              reason_id: reason_id
+              note: I spilled my coffee on it
+            schema:
+              $ref: '#/components/schemas/inject_adjustment_request'
+        required: true
+  /inventory/adjustment_reasons:
+    post:
+      responses:
+        '201':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                example:
+                  id: 97d67512-2000-4e5b-8ded-b8fddfcaf6ad
+                  type: Damaged
+                  subtype: Defect
+                $ref: '#/components/schemas/create_adjustment_reason_response'
+        '400':
+          description: One of the stock locations is not found.
+        '500':
+          description: An internal error occurred.
+      description: >
+        Creates an [adjustment](/docs/glossary.html#term-adjustment) reason, which can be used
+        across all stores configured for your business.
+
+
+        Use the `type` and `subtype` properties to define the adjustment type
+        and reason for users to select on NewStore Fulfillment App, when adjusting inventory in the store.
+
+
+        **Related methods:**
+
+        - [List adjustment
+        reasons](/newstore-cloud/inventory/inventory_manager_api_bff.html#operation/listAdjustmentReasons)
+      operationId: createAdjustmentReason
+      summary: Create adjustment reason
+      requestBody:
+        content:
+          application/json:
+            example:
+              type: Damaged
+              subtype: Defect
+              origin_stock_location: main
+              destination_stock_location: damaged
+            schema:
+              $ref: '#/components/schemas/create_adjustment_reason_request'
+        required: true
+components:
+  schemas:
+    UUID:
+      pattern: >-
+        ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$
+      type: string
+    receiving_transaction_references:
+      type: object
+      title: >-
+        Represents the document reference that specifies the inventory line
+        items being received.
+      description: Transaction identifiers.
+      anyOf:
+        - required:
+            - shipment_ref
+        - required:
+            - order_ref
+      properties:
+        shipment_ref:
+          type: string
+          nullable: true
+        order_ref:
+          type: string
+          nullable: true
+    start_receiving_transaction_request:
+      type: object
+      title: Inventory Receiving Transaction
+      description: >-
+        Payload with all necessary information for storing inventory receiving
+        information.
+      oneOf:
+        - required:
+            - references
+          properties:
+            references:
+              $ref: '#/components/schemas/receiving_transaction_references'
+        - required:
+            - asn_id
+          properties:
+            asn_id:
+              type: string
+              title: The ASN id
+              description: The identifier of the ASN the items are received against.
+    associate:
+      type: object
+      nullable: true
+      title: Store associate data
+      description: Store associate data as seen in the receiving transaction.
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        store_id:
+          type: string
+        image_url:
+          type: string
+    image:
+      type: object
+      title: Product Image
+      description: Information about a product image (no color swatches).
+      properties:
+        url:
+          description: Product image URL
+          type: string
+          format: uri
+        title:
+          description: Product image title
+          type: string
+        identifier:
+          type: string
+          description: Product image identifier (For example, `image-top-1`)
+        is_main:
+          type: boolean
+          description: Flag to identify the main image (for displaying purposes)
+        alt_text:
+          description: The alt tag value for the image.
+          type: string
+        dominant_color:
+          type: string
+        width:
+          type: number
+          multipleOf: 1
+        height:
+          type: number
+          multipleOf: 1
+        aspect_ratio:
+          type: number
+          multipleOf: 0.0001
+        tags:
+          type: array
+          items:
+            type: string
+    color_swatch:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        title:
+          type: string
+        alt_text:
+          type: string
+        dominant_color:
+          type: string
+        width:
+          type: number
+          multipleOf: 1
+        height:
+          type: number
+          multipleOf: 1
+        aspect_ratio:
+          type: number
+          multipleOf: 0.0001
+    variation:
+      type: object
+      properties:
+        price:
+          description: product price shown to the consumer (can be inclusive or exclusive of tax)
+          type: number
+          multipleOf: 0.01
+        variation_color_value:
+          description: 'color value, e.g. blue'
+          type: string
+        color_swatch:
+          $ref: '#/components/schemas/color_swatch'
+        variation_size_value:
+          type: string
+        variation_size_gender:
+          type: string
+        variation_size_system:
+          type: string
+        variation_size_type:
+          type: string
+        variation_additional_1_name:
+          type: string
+        variation_additional_1_value:
+          type: string
+        variation_additional_2_name:
+          type: string
+        variation_additional_2_value:
+          type: string
+    product:
+      type: object
+      description: A product list item (a cropped version of a product item)
+      allOf:
+        - properties:
+            product_id:
+              type: string
+              description: product identifier
+            is_available:
+              type: boolean
+              description: True if product can be purchased
+            external_identifiers:
+              type: object
+            title:
+              description: The product title (product name)
+              type: string
+            caption:
+              description: The short description of this product.
+              type: string
+            description:
+              description: Description of this product.
+              type: string
+            main_category_path:
+              type: array
+              items:
+                type: string
+            main_category_full_path:
+              description: >-
+                A fully qualified main category path value that can be used to
+                filter out products under the main category path
+              type: string
+            main_category_position:
+              type: integer
+              nullable: true
+              description: The position relative to the main category
+            images:
+              type: array
+              items:
+                $ref: '#/components/schemas/image'
+            price:
+              description: The product price shown to the consumer (can be inclusive or exclusive of tax)
+              type: number
+              multipleOf: 0.01
+            currency_code:
+              type: string
+              description: >
+                The currency of this price as 3 character ISO-4217 code. Example
+                USD, EUR.
+            online_from:
+              type: string
+              format: date-time
+              description: >-
+                Date representation, as defined by
+                https://tools.ietf.org/html/rfc3339 (ISO 8601). Timezone: UTC
+            online_to:
+              type: string
+              format: date-time
+              description: >-
+                Date representation, as defined by
+                https://tools.ietf.org/html/rfc3339 (ISO 8601). Timezone: UTC
+        - $ref: '#/components/schemas/variation'
+    line_item_full_product:
+      type: object
+      title: Represents the received product id with its quantity.
+      description: Transaction line item.
+      required:
+        - product
+        - quantity
+      properties:
+        product:
+          $ref: '#/components/schemas/product'
+        quantity:
+          type: integer
+          nullable: true
+          minimum: 0
+          description: DEPRECATED. Use received_quantity instead.
+        received_quantity:
+          type: integer
+          nullable: true
+          minimum: 0
+          description: The number of items received for the product SKU.
+        expected_quantity:
+          type: integer
+          nullable: true
+          minimum: 0
+        remaining_quantity:
+          type: integer
+          nullable: true
+          minimum: 0
+    receiving_transaction_full_product:
+      type: object
+      title: Inventory Receiving Transaction
+      description: Receiving transaction data as communicated to FF.
+      required:
+        - references
+        - line_items
+        - id
+        - status
+      properties:
+        references:
+          $ref: '#/components/schemas/receiving_transaction_references'
+        associate:
+          $ref: '#/components/schemas/associate'
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/line_item_full_product'
+        line_item_count:
+          type: integer
+          minimum: 0
+          description: The number of different line-items received
+        total_unit_count:
+          type: integer
+          minimum: 0
+          description: The total number of items received
+        processed_at:
+          description: Date and time when the transaction was created.
+          format: date-time
+          type: string
+        id:
+          type: string
+          description: Unique identifier of the transaction.
+        revision:
+          type: integer
+          description: Version of the transaction
+          minimum: 1
+        updated_at:
+          description: Date and time when the transaction was last updated.
+          format: date-time
+          type: string
+        status:
+          type: string
+          enum:
+            - open
+            - closed
+        asn_id:
+          type: string
+          nullable: true
+          description: The identifier of the ASN this transaction was received against.
+    count_task:
+      title: Count task
+      description: Represents a count task with the list of the items to count.
+      required:
+        - id
+        - status
+        - due_date
+      type: object
+      properties:
+        id:
+          type: string
+          description: The identifier for a count task.
+        fulfillment_node_id:
+          type: string
+          description: >-
+            The identifier of the fulfillment location node or ID that the task
+            was created for.
+        status:
+          type: string
+          enum:
+            - pending
+            - in_progress
+            - completed
+            - cancelled
+        associate:
+          $ref: '#/components/schemas/associate'
+        due_date:
+          type: string
+          description: The date the count task was scheduled for in ISO 8601 format.
+        created_at:
+          type: string
+          format: date
+          description: The date the count task was created at.
+        updated_at:
+          type: string
+          format: date
+          description: The last date the count task was updated at.
+        external_id:
+          type: string
+          description: 'External identifier of the count task, unique per store.'
+        stock_location:
+          type: string
+          title: Stock location name
+          description: >-
+            The stock location name, in which the cycle count should be done. If
+            no value is provided, or NewStore is not the inventory master for
+            your business, the cycle count task is created for the default stock
+            location in the store.
+          example: main
+    get_count_tasks_response:
+      title: Get count tasks response
+      description: Response schema containing the list of count tasks assigned to a store
+      type: object
+      required:
+        - count_tasks
+      properties:
+        count_tasks:
+          type: array
+          items:
+            type: object
+            allOf:
+              - required:
+                  - line_item_count
+                properties:
+                  line_item_count:
+                    type: integer
+                    description: The number of line items received.
+                    minimum: 1
+              - $ref: '#/components/schemas/count_task'
+    create_count_task_request:
+      title: Import count task
+      description: Request to create a count task
+      required:
+        - product_ids
+        - due_date
+        - external_id
+      type: object
+      properties:
+        due_date:
+          type: string
+          description: The date the count transaction is scheduled for in ISO 8601 format.
+        product_ids:
+          type: array
+          description: The arrays of SKUs to be counted.
+          items:
+            type: string
+            description: Product identifier.
+        external_id:
+          type: string
+          description: 'External identifier of the count task, unique per store'
+        stock_location:
+          type: string
+          title: Stock location name
+          description: >-
+            The stock location name, in which the cycle count should be done.
+            If no value is provided, or NewStore is not the inventory master for
+            your business, the cycle count task is created for the default stock
+            location in the store.
+    create_count_task_response:
+      title: Response for the create count task request
+      required:
+        - success
+      type: object
+      properties:
+        success:
+          type: boolean
+    line_item_short:
+      type: object
+      title: Represents the received product id with its quantity.
+      description: Transaction line item.
+      required:
+        - product_id
+      properties:
+        product_id:
+          type: string
+          description: >-
+            The unique identifier for the product. This ID is created in
+            NewStore when the product is imported into NewStore.
+          minLength: 1
+        ordered_quantity:
+          type: integer
+          nullable: true
+          minimum: 0
+          description: >-
+            The number of items ordered for the product SKU.
+    transfer_shipping_configuration_response:
+      type: object
+      title: Transfer shipping configuration response
+      description: >-
+        Payload with all necessary information with updated transfer order
+        delivery configuration.
+      required:
+        - transfer_shipping_configuration
+      properties:
+        revision:
+          type: integer
+          description: Defines the revision of the uploaded config.
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when last update of fulfillment_config was performed.
+        transfer_shipping_configuration:
+          type: array
+          items:
+            type: object
+            required:
+              - from_location_id
+              - to_location_ids
+              - service_level_ids
+            properties:
+              from_location_id:
+                type: string
+                title: Sender identifier
+                description: >-
+                  The identifier of the fulfillment node from where the order
+                  will be delivered.
+              to_location_ids:
+                type: array
+                description: >-
+                  List of fulfillment node IDs to where the sender can deliver
+                  or '*' if all the stores are supported.
+                items:
+                  type: string
+                  title: Receiver identifier
+                  description: >-
+                    The identifier of the fulfillment node to where the order
+                    will be delivered.
+              service_level_ids:
+                type: array
+                description: >-
+                  List of service level identifiers that the store can use for
+                  delivery. The fulfilment configuration MUST contain these IDs.
+                items:
+                  type: string
+                  title: Service level identifier
+                  description: >-
+                    The service level identifier that can be used to deliver
+                    goods.
+    transfer_shipping_configuration:
+      type: object
+      title: Transfer order configuration
+      description: >-
+        Payload with all necessary information for adding transfer shipping
+        configuration.
+      required:
+        - transfer_shipping_configuration
+      properties:
+        transfer_shipping_configuration:
+          type: array
+          items:
+            type: object
+            required:
+              - from_location_id
+              - to_location_ids
+              - service_level_ids
+            properties:
+              from_location_id:
+                type: string
+                title: Sender identifier
+                description: >-
+                  The identifier of the fulfillment node from where the order
+                  will be delivered.
+              to_location_ids:
+                type: array
+                description: >-
+                  List of fulfillment node IDs to where the sender can deliver
+                  or '*' if all the stores are supported.
+                items:
+                  type: string
+                  title: Receiver identifier
+                  description: >-
+                    The identifier of the fulfillment node to where the order
+                    will be delivered.
+              service_level_ids:
+                type: array
+                description: >-
+                  List of service level identifiers that the store can use for
+                  delivery. The fulfillment configuration MUST contain these IDs.
+                items:
+                  type: string
+                  title: Service level identifier
+                  description: >-
+                    The service level identifier that can be used to deliver
+                    goods.
+    transfer_shipping_configuration_response_400:
+      type: object
+      required:
+        - error_code
+        - message
+      properties:
+        error_code:
+          description: A code describing the error.
+          type: string
+          minLength: 1
+        message:
+          description: A human-readable error message.
+          type: string
+    inject_adjustment_request:
+      title: Injection request.
+      type: object
+      required:
+        - line_items
+        - reason_id
+        - fulfillment_node_id
+      properties:
+        fulfillment_node_id:
+          type: string
+          description: >-
+            The identifier of the fulfillment_node where the adjustment was
+            done.
+        note:
+          description: A note about the adjustment.
+          type: string
+        line_items:
+          description: >-
+            The list of the product IDs of line items (SKUs) and their
+            quantities.
+          type: array
+          items:
+            type: object
+            required:
+              - product_id
+              - quantity
+            properties:
+              product_id:
+                type: string
+                description: Product identifier.
+              quantity:
+                description: The quantity of line items (SKUs) that need to be adjusted.
+                type: integer
+                minimum: 1
+        reason_id:
+          type: string
+          description: The reason id with which the adjustment should be injected.
+    inject_adjustment_response:
+      title: Response of the inject adjustment.
+      type: object
+      required:
+        - id
+        - created_at
+        - updated_at
+        - note
+        - line_items
+        - status
+        - revision
+        - reason
+        - line_item_count
+        - total_unit_count
+      properties:
+        id:
+          description: >-
+            The adjustment UUID, a unique identifier of the adjustment
+            transaction.
+          type: string
+        created_at:
+          description: The date and time when the adjustment was created.
+          format: date-time
+          type: string
+        updated_at:
+          description: The date and time when the adjustment was last updated.
+          format: date-time
+          type: string
+        injected_by:
+          description: The id of the user that performed the action.
+          type: string
+        note:
+          description: A note about the adjustment
+          type: string
+        line_items:
+          description: >-
+            The list of the product IDs of line items (SKUs) and their
+            quantities.
+          type: array
+          items:
+            type: object
+            required:
+              - product_id
+              - quantity
+            properties:
+              product_id:
+                type: string
+                description: >-
+                  The unique identifier for the product. This ID is created in
+                  NewStore when the product is imported into the NewStore platform.
+                minLength: 1
+              quantity:
+                description: The quantity of line items (SKUs) that need to be adjusted.
+                type: integer
+                minimum: 1
+        revision:
+          description: The version of the adjustment
+          type: integer
+          minimum: 1
+        status:
+          description: The status of the adjustment transaction.
+          type: string
+          enum:
+            - open
+            - closed
+        reason:
+          type: object
+          description: The reason for the adjustment.
+          properties:
+            id:
+              type: string
+              description: >-
+                The reason UUID, a unique identifier of the reason of the
+                adjustment transaction.
+            type:
+              type: string
+              description: >-
+                The type of the adjustment, such as 'Damaged out' or 'Lost'.
+                This may or may not have a subtype associated with it.
+            subtype:
+              type: string
+              description: >-
+                The subtype of the adjustment, such as 'Broken' or 'Stained' for
+                the type 'Damaged out'.
+        line_item_count:
+          type: integer
+          description: The number of line items (SKUs) adjusted.
+          minimum: 0
+        total_unit_count:
+          type: integer
+          description: The total number of items (SKUs) adjusted.
+          minimum: 0
+    create_adjustment_reason_request:
+      title: Create an adjustment reason
+      type: object
+      anyOf:
+        - required:
+            - type
+            - origin_stock_location
+        - required:
+            - type
+            - destination_stock_location
+      properties:
+        type:
+          description: >-
+            The type of the adjustment. This may or may not have a subtype
+            associated with it. The value provided for this property appears as
+            the adjustment type on NewStore Fulfillment App.
+          type: string
+          example: Lost
+        subtype:
+          description: >-
+            The subtype of the adjustment, such as 'Broken' or 'Stained' for the
+            type 'Damaged out'. The value for this property appears as the
+            adjustment reason for the associated adjustment type on NewStore
+            Fulfillment App.
+          type: string
+          example: Broken
+        origin_stock_location:
+          description: The stock location where the item will be moved from.
+          type: string
+          example: main
+        destination_stock_location:
+          description: The stock location where the item will be moved to.
+          type: string
+          example: damaged
+    create_adjustment_reason_response:
+      title: Get an adjustment reason
+      type: object
+      required:
+        - type
+      properties:
+        id:
+          description: >-
+            The reason UUID, a unique identifier of the reason of the adjustment
+            transaction.
+          type: string
+        type:
+          description: >-
+            The type of the adjustment. This may or may not have a subtype
+            associated with it. The value provided for this property appears as
+            the adjustment type on NewStore Fulfillment App
+          type: string
+          example: Damaged out
+        subtype:
+          description: >-
+            The subtype of the adjustment, such as 'Broken' for the type
+            'Damaged out'. The value for this property appears as the adjustment
+            reason for the associated adjustment type on NewStore Fulfillment
+            App.
+          type: string
+          example: Broken
+  responses: {}
+  parameters: {}
+  examples: {}
+  requestBodies: {}
+  headers: {}
+  securitySchemes: {}
+  links: {}
+  callbacks: {}
+x-annotation-crossOriginAllowed: true
+x-annotation-experimental:
+  changes:
+    - 03/2019 - Initial release
+    - >-
+      09/2019 - Add resources for delete a transfer and to create/update
+      shipping configuration
+    - >-
+      09/2019 - Add the remaining_quantity field to receiving transaction line
+      items. It gets updated on any transaction change.
+    - >-
+      11/2019 - Add the total number of items to the receiving transaction
+      endpoints
+    - >-
+      03/2020 - Changes name of endpoint /transfer_order_delivery_config to
+      /transfer_shipping_config and the key of the response as well (from
+      transfer_order_configuration to transfer_shipping_configuration)

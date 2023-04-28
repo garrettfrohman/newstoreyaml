@@ -1,0 +1,1987 @@
+openapi: 3.0.0
+info:
+  title: Order information retrieval API
+  version: v0
+  description: |
+    Use this API to retrieve information related to orders being processed in the NewStore platform
+    or via an external order management system.
+servers:
+  - url: 'https://dodici.x.newstore.net/v0'
+tags:
+  - name: Orders by ID and type
+    description: |
+      Use this resource to retrieve orders using the order ID and type of ID, such as ``external``
+      for external orders.
+  - name: Order history for customers
+    description: |
+      Use this resource to retrieve order history for specified customers.
+  - name: Manage orders
+    description: |
+      Use this resource to manage orders being processed in the NewStore platform or via an external
+      order management system., and update related information for these orders.
+
+      You can use this resource to list product or shipping prices, cancel an order or extend its
+      [grace period](/docs/glossary.html#term-grace-period), and add serial numbers or items in the order.
+components:
+  securitySchemes:
+    newStoreAccessToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - newStoreAccessToken: []
+paths:
+  '/orders/{id}/prices':
+    post:
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The identifier of the order.
+      responses:
+        '200':
+          description: Price information for the provided items.
+          content:
+            application/json:
+              example:
+                currency: USD
+                items:
+                  - type: product
+                    id: 927c702a-3cb1-48c1-9189-554bf9d0fde7
+                    price:
+                      gross: 231.6
+                      net: 211.5
+                      tax: 20.1
+                    status: in_fulfillment
+                  - type: shipping
+                    id: 7b1d4a63-c97f-4ca9-8771-9464c1d86fea
+                    price:
+                      gross: 23.65
+                      net: 22
+                      tax: 1.65
+                  - type: gift-wrapping
+                    id: 0612b770-8721-4c6c-bd68-ebded9bea3d7
+                    price:
+                      gross: 12.5
+                      net: 10
+                      tax: 2.65
+              schema:
+                description: The response for retrieving price information.
+                type: object
+                required:
+                  - currency
+                  - items
+                properties:
+                  currency:
+                    type: string
+                    minLength: 3
+                    maxLength: 3
+                    description: 'The currency that was used to buy the order, ISO 4217.'
+                  items:
+                    type: array
+                    minItems: 1
+                    items:
+                      oneOf:
+                        - type: object
+                          required:
+                            - id
+                            - type
+                            - price
+                            - status
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                                - product
+                            id:
+                              type: string
+                              minLength: 36
+                              maxLength: 36
+                              description: The identifier of the item.
+                            price:
+                              description: The response for retrieving price information.
+                              type: object
+                              required:
+                                - gross
+                                - net
+                                - tax
+                              properties:
+                                gross:
+                                  type: number
+                                  description: The gross price of the item.
+                                net:
+                                  type: number
+                                  description: The net price of the item.
+                                tax:
+                                  type: number
+                                  description: The taxes of the item.
+                            status:
+                              description: 'The status of a single item, doesn''t reflect the order status'
+                              type: string
+                              enum:
+                                - complete
+                                - cancelled
+                                - pending
+                                - in_fulfillment
+                                - captured
+                                - on_hold
+                        - type: object
+                          required:
+                            - id
+                            - type
+                            - price
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                                - shipping
+                                - gift-wrapping
+                            id:
+                              type: string
+                              minLength: 36
+                              maxLength: 36
+                              description: The identifier of the item.
+                            price:
+                              description: The response for retrieving price information.
+                              type: object
+                              required:
+                                - gross
+                                - net
+                                - tax
+                              properties:
+                                gross:
+                                  type: number
+                                  description: The gross price of the item.
+                                net:
+                                  type: number
+                                  description: The net price of the item.
+                                tax:
+                                  type: number
+                                  description: The taxes of the item.
+        '400':
+          description: Bad Request Error.
+          content:
+            application/json:
+              example:
+                error_code: bad_request
+                message: The number of products can't exceed 500.
+                request_id: ec2f3c9bb016ba971bf6074098363
+              schema:
+                description: The error response.
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    minLength: 1
+                    description: The specific code of the error.
+                  message:
+                    type: string
+                    minLength: 1
+                    description: A message explaining the error.
+                  request_id:
+                    type: string
+                    minLength: 1
+                    description: 'The identifier of the request, which can be used for tracing.'
+        '404':
+          description: Not found Error.
+          content:
+            application/json:
+              example:
+                error_code: not_found
+                message: The order '57787cdb-3474-47b5-b3ec-7b776731309e' couldn't be found.
+                request_id: ec2f3c9bb016ba971bf6074098363
+              schema:
+                description: The error response.
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    minLength: 1
+                    description: The specific code of the error.
+                  message:
+                    type: string
+                    minLength: 1
+                    description: A message explaining the error.
+                  request_id:
+                    type: string
+                    minLength: 1
+                    description: 'The identifier of the request, which can be used for tracing.'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              example:
+                error_code: internal_server_error
+                message: Couldn't process request due to an internal error.
+                request_id: ec2f3c9bb016ba971bf6074098363
+              schema:
+                description: The error response.
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    minLength: 1
+                    description: The specific code of the error.
+                  message:
+                    type: string
+                    minLength: 1
+                    description: A message explaining the error.
+                  request_id:
+                    type: string
+                    minLength: 1
+                    description: 'The identifier of the request, which can be used for tracing.'
+      description: |
+        Use this method to retrieve price information for products or shipping options, defined
+        in ``items`` in the request payload. The price information includes the gross price of the item,
+        the net price, and the tax levied on the item.
+
+        If the prices you requested are for products, the response payload also contains the status
+        of the product. For example, ``cancelled`` or ``pending``, or ``in_fulfillment``, and so on.
+
+        **Important**: You can only request for the pricing information of a maximum of **500**
+        items, exceeding which the method returns a ``400`` error.
+      summary: List product or shipping prices
+      tags:
+        - Manage orders
+      operationId: get-price-information-for-items
+      requestBody:
+        content:
+          application/json:
+            example:
+              items:
+                - type: product
+                  id: 927c702a-3cb1-48c1-9189-554bf9d0fde7
+                - type: shipping
+                - type: gift-wrapping
+            schema:
+              description: The request for retrieving price information.
+              type: object
+              required:
+                - items
+              properties:
+                items:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    oneOf:
+                      - required:
+                          - id
+                          - type
+                        properties:
+                          type:
+                            type: string
+                            enum:
+                              - product
+                          id:
+                            type: string
+                            minLength: 36
+                            maxLength: 36
+                            description: The identifier of the item.
+                      - required:
+                          - type
+                        properties:
+                          type:
+                            type: string
+                            enum:
+                              - shipping
+                              - gift-wrapping
+        required: true
+  '/orders/{id}':
+    get:
+      tags:
+        - Orders by ID and type
+      description: |
+        Retrieves the specified order by order ID and ID type for the order.
+
+        This method allows you to retrieve information about orders that were placed in the platform,
+        as well as outside of the NewStore platform, which are defined by the order type ``external``.
+
+        **Note**: In case of ``internal`` id type the API will only return orders that exists in the NewStore database and will **NOT** call the external OMS webhook.
+        In case of ``external`` id type this API will check if the external OMS webhook is configured. In this case the API will fetch the order data from the configured webhook. If no external OMS is configured then the order will be fetched from the NewStore database.
+      summary: Get order by ID and ID type
+      operationId: get-sales-order-by-id-and-id-type
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the order.
+        - in: query
+          name: id_type
+          required: true
+          schema:
+            type: string
+            enum:
+              - external
+              - internal
+          description: 'ID type on which order should be fetched. Example "external" in case of human-readable identifier of the order, else "internal" in case of system-generated UUID.'
+      responses:
+        '200':
+          description: Successfully fetch order by ID and ID type
+          content:
+            application/json:
+              examples:
+                Sales Order By ID:
+                  value:
+                    id: GD000001234
+                    origin: newstore
+                    origin_id: c2569449-1d0d-4ca5-8d00-d80c38d5efcb
+                    channel_type: store
+                    placed_at: '2021-11-22T12:51:39.30Z'
+                    status: open
+                    currency: USD
+                    fulfillment_type: in_store_purchase
+                    customer:
+                      id: b65ad81a-5225-43de-9c45-cc41cddc3479
+                      name: John Doe
+                      email: john.doe@gmail.com
+                    items:
+                      - id: b9a144c2-3bd2-4066-983e-b2f2aa0c23ee
+                        origin_id: b9a144c2-3bd2-4066-983e-b2f2aa0c23ee
+                        status: pending
+                        price:
+                          net: 72
+                          tax: 7.2
+                          gross: 79.2
+                          discount: 10
+                        tax_lines:
+                          - amount: 6
+                            rate: 8.33
+                            name: MA State Tax
+                            country_code: US
+                          - amount: 1.2
+                            rate: 1.67
+                            name: Boston City Tax
+                            country_code: US
+                        product_attributes:
+                          name: Kate Dress
+                          size: M
+                          color: red
+                          image_url: 'https://image.com/dress.jpeg'
+                          additional_variant_1: Regular fit
+                          additional_variant_2: Red with highlights
+                        external_identifier:
+                          sku: '1000012'
+                          serial_number: '1234'
+                        extended_attributes:
+                          - name: colour
+                            value: blue
+                        discounts:
+                          - level: item
+                            value: 10
+                            price_adjustment: 8
+                            type: percentage
+                    gift_wrapping:
+                      message: |-
+                        Congratulations!
+                        John Doe
+                      price:
+                        net: 4.5
+                        gross: 5
+                        tax: 0.5
+                        tax_code: CRM_114
+                    extended_attributes:
+                      - name: colour
+                        value: blue
+                    shipments:
+                      - id: 5bda7ef9-ea58-4f74-ba9f-b9a7ce5a924b
+                        price:
+                          gross: 15
+                          net: 12.25
+                          tax: 2.75
+                      - id: 123875b8-73d9-404f-84a8-c82772a9ae1a
+                        price:
+                          gross: 10
+                          net: 8.5
+                          tax: 1.5
+                    totals:
+                      net: 72
+                      tax: 7.2
+                      gross: 79.2
+                      total: 84.2
+                      shipping: 5
+                      discount: 8
+                    tax_method: vat_included
+                    tax_exempt: false
+                    payment_history:
+                      - category: refund
+                        amount: 77.58
+                        currency: USD
+                        method: cash
+                      - category: payment
+                        amount: 84.2
+                        currency: USD
+                        method: credit_card
+                        payment_information: Visa (**** 1111)
+                Sales Order By ID with tokenized PII:
+                  value:
+                    id: GD000001234
+                    origin: newstore
+                    origin_id: c2569449-1d0d-4ca5-8d00-d80c38d5efcb
+                    channel_type: store
+                    placed_at: '2021-11-22T12:51:39.30Z'
+                    status: open
+                    currency: USD
+                    fulfillment_type: in_store_purchase
+                    customer:
+                      id: NS-EU-01FXX4SPXKPQCEWZWERZS9D7582-01FXX4SWFJKK66QGEEWQ8TRWPS
+                      name: NS-EU-01FXX4SPXKPQCEWZWERZS9D7582-01FXX4SWFJKK66QGEEWQ8TRWPQ
+                      email: NS-EU-01FXX4SPXKPQCEWZWERZS9D7582-01FXX4SWFJKK66QGEEWQ8TRWXS
+                    items:
+                      - id: b9a144c2-3bd2-4066-983e-b2f2aa0c23ee
+                        origin_id: b9a144c2-3bd2-4066-983e-b2f2aa0c23ee
+                        status: pending
+                        price:
+                          net: 72
+                          tax: 7.2
+                          gross: 79.2
+                          discount: 10
+                        tax_lines:
+                          - amount: 6
+                            rate: 8.33
+                            name: MA State Tax
+                            country_code: US
+                          - amount: 1.2
+                            rate: 1.67
+                            name: Boston City Tax
+                            country_code: US
+                        product_attributes:
+                          name: Kate Dress
+                          size: M
+                          color: red
+                          image_url: 'https://image.com/dress.jpeg'
+                          additional_variant_1: Regular fit
+                          additional_variant_2: Red with highlights
+                        external_identifier:
+                          sku: '1000012'
+                          serial_number: '1234'
+                        extended_attributes:
+                          - name: colour
+                            value: blue
+                        discounts:
+                          - level: item
+                            value: 10
+                            price_adjustment: 8
+                            type: percentage
+                    gift_wrapping:
+                      message: |-
+                        Congratulations!
+                        John Doe
+                      price:
+                        net: 4.5
+                        gross: 5
+                        tax: 0.5
+                        tax_code: CRM_114
+                    extended_attributes:
+                      - name: colour
+                        value: blue
+                    totals:
+                      net: 72
+                      tax: 7.2
+                      gross: 79.2
+                      total: 84.2
+                      shipping: 5
+                      discount: 8
+                    tax_method: vat_included
+                    tax_exempt: false
+                    payment_history:
+                      - category: refund
+                        amount: 77.58
+                        currency: USD
+                        method: cash
+                      - category: payment
+                        amount: 84.2
+                        currency: USD
+                        method: credit_card
+                        payment_information: Visa (**** 1111)
+              schema:
+                title: Schema for fetching sales order using external ID
+                type: object
+                required:
+                  - id
+                  - origin
+                  - origin_id
+                  - placed_at
+                  - channel_type
+                  - status
+                  - currency
+                  - fulfillment_type
+                  - items
+                  - totals
+                properties:
+                  id:
+                    description: External ID of an order
+                    type: string
+                  origin:
+                    type: string
+                    enum:
+                      - newstore
+                      - external
+                    minLength: 1
+                    description: Describes in which Order Management System the order originated from.
+                  origin_id:
+                    type: string
+                    minLength: 1
+                    description: 'The identifier of the order from the Order Management System where it originated from. If it originated in Newstore, it must be the identifier assigned to the order during the order creation process.'
+                  placed_at:
+                    type: string
+                    format: date-time
+                    description: 'The time when the order was placed. It should follow https://tools.ietf.org/html/rfc3339 in UTC.'
+                  channel_type:
+                    type: string
+                    enum:
+                      - store
+                      - web
+                    minLength: 1
+                    description: The channel through which the order was placed.
+                  status:
+                    description: 'Current status of the sales order. ''on_hold'' means the order is in the grace period, ''open'' means it is currently being fulfilled and ''closed'' means all items reached a terminal state.'
+                    enum:
+                      - on_hold
+                      - open
+                      - closed
+                    type: string
+                  currency:
+                    type: string
+                    minLength: 3
+                    maxLength: 3
+                    description: Currency code (ISO 4217) used in internal accounting
+                  fulfillment_type:
+                    type: string
+                    enum:
+                      - traditional
+                      - same_day_delivery
+                      - in_store_pickup
+                      - in_store_purchase
+                    minLength: 1
+                    description: The fulfillment type of the order.
+                  tax_exempt:
+                    type: boolean
+                    description: 'If the tax was exempted for this order. In case of external orders, the flag will always return false.'
+                  tax_method:
+                    type: string
+                    enum:
+                      - vat_included
+                      - vat_excluded
+                    description: 'Method of calculation of the taxes, can be vat_included or vat_excluded.'
+                  items:
+                    description: Contains a list of order items
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - origin_id
+                        - status
+                        - price
+                        - product_attributes
+                      properties:
+                        id:
+                          description: Order item UUID
+                          type: string
+                        product_id:
+                          description: Product ID for order item.
+                          type: string
+                        origin_id:
+                          type: string
+                          minLength: 1
+                          description: 'If the origin of the order is ''newstore'', this should be the order item identifier. If the order originated in an external system, it should be the identifier from the external system.'
+                        status:
+                          description: 'Current status of the order item. ''pending'' means the item is in the grace period, ''on_hold'' means the item couldn''t be fulfilled and is in a conflict status.'
+                          enum:
+                            - pending
+                            - in_fulfillment
+                            - on_hold
+                            - complete
+                            - cancelled
+                            - returned
+                          type: string
+                        price:
+                          type: object
+                          required:
+                            - gross
+                            - net
+                            - tax
+                            - discount
+                          properties:
+                            gross:
+                              type: number
+                              description: The gross price of the item.
+                            net:
+                              type: number
+                              description: The net price of the item.
+                            tax:
+                              type: number
+                              description: The taxes of the item.
+                            discount:
+                              type: number
+                              description: The applied discount to the item.
+                            tax_lines:
+                              type: array
+                              description: Detailed tax information.
+                              maxItems: 100
+                              items:
+                                type: object
+                                required:
+                                  - amount
+                                  - rate
+                                properties:
+                                  amount:
+                                    type: number
+                                    description: Monetary tax amount for this line.
+                                    minimum: 0
+                                  rate:
+                                    type: number
+                                    description: 'Decimal representation of the tax rate for this line, e.g. 6.25'
+                                    minimum: 0
+                                  name:
+                                    description: 'Name of the tax line, e.g. MA Sales Tax.'
+                                    type: string
+                                  country_code:
+                                    description: 'The code of the country of the tax in the ISO 3166 ALPHA-2 format. For example, GB, DE or US.'
+                                    type: string
+                                    maxLength: 2
+                        external_identifier:
+                          description: External identifiers for order item
+                          type: object
+                          properties:
+                            '*':
+                              description: 'Any external identifier as specified in the catalog data, e.g. SKU, EAN and others.'
+                              type: string
+                            serial_number:
+                              description: Serial number for order item
+                              type: string
+                        product_attributes:
+                          type: object
+                          required:
+                            - name
+                          properties:
+                            name:
+                              type: string
+                              minLength: 1
+                              description: The name of the product.
+                            size:
+                              type: string
+                              minLength: 1
+                              description: The size of the product.
+                            color:
+                              type: string
+                              minLength: 1
+                              description: The color of the product.
+                            image_url:
+                              type: string
+                              format: uri
+                              minLength: 1
+                              description: The URL to a product image.
+                            additional_variant_1:
+                              type: string
+                              minLength: 1
+                              description: A free form field for additional product attributes.
+                            additional_variant_2:
+                              type: string
+                              minLength: 1
+                              description: A free form field for additional product attributes.
+                        discounts:
+                          type: array
+                          description: A list of applied discounts
+                          minLength: 1
+                          items:
+                            type: object
+                            required:
+                              - level
+                              - value
+                              - price_adjustment
+                              - type
+                            properties:
+                              level:
+                                type: string
+                                enum:
+                                  - item
+                                  - order
+                                description: 'On which level the discount was applied, either on the entire order or only on this item.'
+                              value:
+                                type: number
+                                minimum: 0
+                                description: 'If the discount is of type ''fixed'', this is equal to the adjusted price amount. If the discount is of type ''percentage'', this is the percentage, e.g. 20%.'
+                              price_adjustment:
+                                type: number
+                                minimum: 0
+                                description: The applied discount.
+                              type:
+                                type: string
+                                enum:
+                                  - fixed
+                                  - percentage
+                                description: 'The type of the discount, either ''fixed'' or ''percentage''.'
+                        extended_attributes:
+                          type: array
+                          maxItems: 100
+                          items:
+                            type: object
+                            required:
+                              - name
+                              - value
+                            maxProperties: 2
+                            properties:
+                              name:
+                                type: string
+                                maxLength: 100
+                              value:
+                                type: string
+                                maxLength: 8192
+                  gift_wrapping:
+                    type: object
+                    description: Gift wrapping information. This field is not required and will not be present if gift wrapping is not applicable for the order
+                    required:
+                      - price
+                    properties:
+                      message:
+                        type: string
+                        description: Personalised message to be printing on the gift wrapper.
+                      price:
+                        type: object
+                        required:
+                          - net
+                          - tax
+                          - gross
+                        properties:
+                          net:
+                            type: number
+                            description: Net price for gift wrapping.
+                          gross:
+                            type: number
+                            description: Gross price for the gift wrapping.
+                          tax:
+                            type: number
+                            description: Tax amount for the gift wrapping
+                          tax_code:
+                            type: string
+                            description: Tax code (also known as tax class) for gift wrapping.
+                  customer:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        minLength: 1
+                        description: The identifier of the customer. If the tenant is configured to use PII in a data privacy compliant way then this identifier is the PII token for the internal customer id.
+                      name:
+                        type: string
+                        minLength: 1
+                        description: The full name of the customer. If the tenant is configured to use PII in a data privacy compliant way then this identifier is the PII token for the full name.
+                      email:
+                        type: string
+                        format: email
+                        minLength: 1
+                        description: The email address of the customer. If the tenant is configured to use PII in a data privacy compliant way then this identifier is the PII token for the email address.
+                  totals:
+                    type: object
+                    required:
+                      - gross
+                      - net
+                      - tax
+                      - total
+                      - discount
+                      - shipping
+                    properties:
+                      gross:
+                        type: number
+                        description: 'The gross price of the order, is the sum of all product item gross prices.'
+                      net:
+                        type: number
+                        description: 'The net price of the order, is the sum of all product item net prices.'
+                      tax:
+                        type: number
+                        description: 'The taxes of the order, is the sum of all product item taxes.'
+                      total:
+                        type: number
+                        description: 'The total amount that the customer paid including shipping costs, taxes, gift_wrapping and any discounts.'
+                      discount:
+                        type: number
+                        description: The applied discount to the entire order.
+                        minimum: 0
+                      shipping:
+                        type: number
+                        description: The shipping amount.
+                  payment_history:
+                    type: array
+                    minItems: 1
+                    required:
+                      - category
+                      - amount
+                      - currency
+                      - method
+                    items:
+                      type: object
+                      description: Contains the payments/refunds history for the order. Can also include multiple payments against multiple credit sources (i.e. gift card + credit card)
+                      properties:
+                        category:
+                          type: string
+                          description: Describes if it is a Payment (authorization or capture) or Refund.
+                          enum:
+                            - payment
+                            - refund
+                        amount:
+                          type: number
+                          description: The monetary value of the payment/refund.
+                          minimum: 0
+                        currency:
+                          description: 'The currency of the amount as 3 character ISO-4217 code. Example USD, EUR.'
+                          maxLength: 3
+                          minLength: 3
+                          type: string
+                        method:
+                          description: The method customer paid for the order.
+                          type: string
+                          enum:
+                            - gift_card
+                            - credit_card
+                            - cash
+                        payment_information:
+                          type: string
+                          description: 'Any payment information related to the payment method used. For example, it can contain the card type along with the last 4 digits of the credit card number.'
+                          example: Visa (**** 1111)
+                  shipments:
+                    type: array
+                    minItems: 1
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - price
+                      properties:
+                        id:
+                          description: Order item UUID of the shipment
+                          type: string
+                        price:
+                          type: object
+                          description: The response for retrieving price information.
+                          required:
+                            - gross
+                            - net
+                            - tax
+                          properties:
+                            gross:
+                              type: number
+                              description: The gross price of the item.
+                            net:
+                              type: number
+                              description: The net price of the item.
+                            tax:
+                              type: number
+                              description: The taxes of the item.
+                        discounts:
+                          type: array
+                          description: A list of applied discounts
+                          minLength: 1
+                          items:
+                            type: object
+                            required:
+                              - level
+                              - value
+                              - price_adjustment
+                              - type
+                            properties:
+                              level:
+                                type: string
+                                enum:
+                                  - shipping
+                                description: 'On which level the discount was applied, either on the entire order or only on this item.'
+                              value:
+                                type: number
+                                minimum: 0
+                                description: 'If the discount is of type ''fixed'', this is equal to the adjusted price amount. If the discount is of type ''percentage'', this is the percentage, e.g. 20%.'
+                              price_adjustment:
+                                type: number
+                                minimum: 0
+                                description: The applied discount.
+                              type:
+                                type: string
+                                enum:
+                                  - fixed
+                                  - percentage
+                                description: 'The type of the discount, either ''fixed'' or ''percentage''.'
+                  extended_attributes:
+                    type: array
+                    maxItems: 100
+                    items:
+                      type: object
+                      required:
+                        - name
+                        - value
+                      maxProperties: 2
+                      properties:
+                        name:
+                          type: string
+                          maxLength: 100
+                        value:
+                          type: string
+                          maxLength: 8192
+        '400':
+          description: Validation for the request failed
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    description: Error code
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+        '404':
+          description: Order with provided ID and ID type was not found
+        '409':
+          description: External webhook payload validation failed.
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    description: Error code
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+              example:
+                error_code: conflict
+                message: 'Failed JSON schema validation with schema /opt/schema.json. Error: "orders" is a required attribute.'
+                request_id: ec2f3c9bb016ba971bf6074098363
+        '412':
+          description: Webhook configuration error.
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    description: Error code
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+              example:
+                error_code: precondition_error
+                message: API Key is required to access external OMS
+                request_id: ec2f3c9bb016ba971bf6074098363
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - message
+                  - request_id
+                properties:
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+        '503':
+          description: External Server Error.
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - message
+                  - request_id
+                properties:
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+              example:
+                error_code: external_server_error
+                message: API Key to the webhook is expired
+                request_id: ec2f3c9bb016ba971bf6074098363
+  /orders:
+    get:
+      tags:
+        - Order history for customers
+      description: |
+        Retrieves the order history for the specified customer, with the ID (``customer_id``)
+        of the customer. If the tenant is configured to use PII in a data privacy compliant way then this is the 
+        PII token for the customer id. Otherwise, it's the NewStore internal identifier.
+
+        **Note**: This API can only be used when integrated with an external OMS.
+      summary: Get order history for customer
+      operationId: get-order-history-for-customer
+      parameters:
+        - in: query
+          name: customer_id
+          required: true
+          schema:
+            type: string
+          description: 'Identifier of the customer for whom the order history is being retrieved. If the tenant is configured to use PII in a data privacy compliant way then this is the PII token for the customer id. Otherwise, this is the internal identifier of the customer.'
+      responses:
+        '200':
+          description: Successfully retrieved the order history for the customer
+          content:
+            application/json:
+              example:
+                orders:
+                  - id: GD000001234
+                    placed_at: '2021-11-22T12:51:39.30Z'
+                    channel_type: web
+                    origin: newstore
+                    origin_id: 6f38b75f-3fb3-4454-975d-af0cb412f8fa
+                    status: in_fulfillment
+                    currency: USD
+                    fulfillment_type: traditional
+                    items:
+                      - id: product-agd6f4
+                        origin_id: b9a144c2-3bd2-4066-983e-b2f2aa0c23ee
+                        status: in_fulfillment
+                        price:
+                          net: 80
+                          tax: 8
+                          gross: 88
+                          discount: 0
+                        product_attributes:
+                          name: Kate Dress
+                          size: M
+                          color: red
+                          image_url: 'https://image.com/dress.jpeg'
+                        external_identifier:
+                          sku: '1000012'
+                          serial_number: '7890'
+                  - id: GD000001235
+                    placed_at: '2021-11-20T08:11:39.30Z'
+                    channel_type: store
+                    origin: external
+                    origin_id: GD000001234
+                    status: complete
+                    currency: USD
+                    fulfillment_type: in_store_purchase
+                    items:
+                      - id: product-df45g6
+                        origin_id: b9a144c2-3bd2-4066-983e-b2f2aa07y65d
+                        status: complete
+                        price:
+                          net: 90
+                          tax: 9
+                          gross: 99
+                          discount: 0
+                        product_attributes:
+                          name: Tote Bag
+              schema:
+                title: Schema for fetching order history for a customer
+                type: object
+                required:
+                  - orders
+                properties:
+                  orders:
+                    description: Customer's order history
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - placed_at
+                        - channel_type
+                        - origin
+                        - origin_id
+                        - status
+                        - currency
+                        - fulfillment_type
+                        - items
+                      properties:
+                        id:
+                          type: string
+                          description: External ID of the order
+                        placed_at:
+                          type: string
+                          format: date-time
+                          description: 'The time when the order was placed. It should follow https://tools.ietf.org/html/rfc3339 in UTC.'
+                        channel_type:
+                          type: string
+                          enum:
+                            - store
+                            - web
+                          description: The channel through which the order was placed.
+                        origin:
+                          type: string
+                          enum:
+                            - newstore
+                            - external
+                          description: Describes in which Order Management System the order originated from.
+                        origin_id:
+                          type: string
+                          minLength: 1
+                          description: 'The identifier of the order from the Order Management System where it originated from. If it originated in Newstore, it must be the identifier assigned to the order during the order creation process.'
+                        status:
+                          description: Current status of the sales order
+                          enum:
+                            - on_hold
+                            - open
+                            - closed
+                          type: string
+                        currency:
+                          type: string
+                          minLength: 3
+                          maxLength: 3
+                          description: Currency code (ISO 4217) used in internal accounting
+                        fulfillment_type:
+                          type: string
+                          enum:
+                            - traditional
+                            - same_day_delivery
+                            - in_store_pickup
+                            - in_store_purchase
+                          description: The fulfillment type of the order.
+                        items:
+                          description: A list of line items which were ordered
+                          type: array
+                          items:
+                            type: object
+                            required:
+                              - id
+                              - origin_id
+                              - status
+                              - price
+                              - product_attributes
+                              - external_identifier
+                            properties:
+                              id:
+                                type: string
+                                description: External ID of the item
+                              origin_id:
+                                type: string
+                                minLength: 1
+                                description: 'If the origin of the order is ''newstore'', this should be the order item identifier. If the order originated in an external system, it should be the identifier from the external system.'
+                              status:
+                                description: Current status of the order item.
+                                enum:
+                                  - pending
+                                  - in_fulfillment
+                                  - on_hold
+                                  - complete
+                                  - cancelled
+                                  - returned
+                                type: string
+                              price:
+                                description: Price of the line item
+                                type: object
+                                required:
+                                  - net
+                                  - tax
+                                  - gross
+                                  - discount
+                                properties:
+                                  net:
+                                    type: number
+                                    description: Net price of the item
+                                  tax:
+                                    type: number
+                                    description: Tax on the item
+                                  gross:
+                                    type: number
+                                    description: Gross price of the item
+                                  discount:
+                                    type: number
+                                    description: Discount applied on the item
+                              product_attributes:
+                                description: Attributes like size and color of the product in this SalesOrder.
+                                type: object
+                                properties:
+                                  name:
+                                    type: string
+                                    minLength: 1
+                                    description: Name of the product.
+                                  size:
+                                    type: string
+                                    minLength: 1
+                                    description: Size of the product.
+                                  color:
+                                    type: string
+                                    minLength: 1
+                                    description: Color of the product.
+                                  image_url:
+                                    type: string
+                                    minLength: 1
+                                    format: uri
+                                    description: The URL to a product image.
+                                  additional_variant_1:
+                                    type: string
+                                    minLength: 1
+                                    description: A free form field for additional product attributes.
+                                  additional_variant_2:
+                                    type: string
+                                    minLength: 1
+                                    description: A free form field for additional product attributes.
+                              external_identifier:
+                                description: External identifier for the order item
+                                type: object
+                                properties:
+                                  serial_number:
+                                    type: string
+                                    description: Serial number of order item
+                                additionalProperties:
+                                  description: 'Any external identifier as specified in the catalog data, e.g. SKU, EAN and others.'
+                                  type: string
+        '400':
+          description: Validation for the request failed
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    description: Error code
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+              example:
+                error_code: bad_request
+                message: Query param "customer_id" is required
+                request_id: ec2f3c9bb016ba971bf6074098363
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    description: Error code
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+              example:
+                error_code: customer_not_found
+                message: customer with given customer_id not found
+                request_id: ec2f3c9bb016ba971bf6074098363
+        '409':
+          description: External webhook payload validation failed.
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    description: Error code
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+              example:
+                error_code: conflict
+                message: 'Failed JSON schema validation with schema /opt/schema.json. Error: "orders" is a required attribute.'
+                request_id: ec2f3c9bb016ba971bf6074098363
+        '412':
+          description: Webhook configuration error.
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    description: Error code
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+              example:
+                error_code: precondition_error
+                message: API Key is required to access external OMS
+                request_id: ec2f3c9bb016ba971bf6074098363
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - message
+                  - request_id
+                properties:
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+              example:
+                error_code: internal_server_error
+                message: Couldn't process request due to an internal error.
+                request_id: ec2f3c9bb016ba971bf6074098363
+        '503':
+          description: External Server Error.
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - message
+                  - request_id
+                properties:
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+              example:
+                error_code: external_server_error
+                message: API Key to the webhook is expired
+                request_id: ec2f3c9bb016ba971bf6074098363
+  '/orders/{id}/cancel':
+    post:
+      tags:
+        - Manage orders
+      summary: Cancel order
+      description: |
+        Initiates the cancellation of the specified order.
+
+        When using this method to cancel an order, you must specify a reason for cancellation,
+        such as ``Item was damaged during shipping``. You can also include a note to provide a
+        longer explanation for the cancellation of the order.
+      operationId: cancel_order
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the order.
+        - in: query
+          name: id_type
+          required: true
+          schema:
+            type: string
+            enum:
+              - external
+              - internal
+          description: Type of order id which should be used for cancellation. Example "external".
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: Request schema for order cancellation.
+              type: object
+              required:
+                - reason
+              properties:
+                reason:
+                  type: string
+                  minLength: 1
+                  description: The reason why the order was cancelled.
+                note:
+                  type: string
+                  nullable: true
+                  description: An optional note.
+            example:
+              reason: Customer remorse
+              note: Example note
+      responses:
+        '200':
+          description: Successfully cancelled order by ID and ID type
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    description: Error code
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+              examples:
+                bad_request_validation_failed:
+                  summary: Validation failed
+                  description: |
+                    Bad request because the request is not valid.
+                  value:
+                    error_code: bad_request
+                    message: 'Validation of cancel order request failed with error: ''reason'' is a required property.'
+                    request_id: ec2f3c9bb016ba971bf6074098363
+                order_not_cancelable_any_longer:
+                  summary: Order is no longer cancelable.
+                  description: |
+                    Cancellation is not supported for the type of fulfillment node to which the order was routed.
+                  value:
+                    error_code: order_not_cancelable_any_longer
+                    message: Order GD000001234 or parts of it are already shipped.
+                    request_id: ec2f3c9bb016ba971bf6074098363
+                order_already_closed:
+                  summary: The Order is already marked as closed.
+                  description: Cancellation is no longer possible as the order is already closed.
+                  value:
+                    error_code: order_not_cancelable_any_longer
+                    message: Order GD000001234 is already closed.
+                    request_id: ec2f3c9bb016ba971bf6074098363
+                order_cancellation_not_allowed:
+                  summary: The Order can't be canceled.
+                  description: |
+                    Cancellation of this order is not allowed because it was routed to a fulfillment location
+                    which doesn't allow cancellation.
+                  value:
+                    error_code: order_not_cancelable_any_longer
+                    message: 'Item 57787cdb-3474-47b5-b3ec-7b776731309e was routed to DC01 (type: dc), cancellations are not allowed from this type of location.'
+                    request_id: ec2f3c9bb016ba971bf6074098363
+        '404':
+          description: Order with provided ID and ID type was not found.
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - message
+                  - request_id
+                properties:
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+              example:
+                error_code: internal_server_error
+                message: Couldn't process request due to an internal error.
+                request_id: ec2f3c9bb016ba971bf6074098363
+    get:
+      description: API to get cancellation status by order ID
+      summary: Get Cancellation Status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the order.
+        - in: query
+          name: id_type
+          required: true
+          schema:
+            type: string
+            enum:
+              - external
+              - internal
+          description: ID type on which order should be fetched. Example "external".
+      responses:
+        '200':
+          description: Successfully fetched cancellation status for the order.
+          content:
+            application/json:
+              schema:
+                description: Request schema for order cancellation status.
+                type: object
+                required:
+                  - cancelable
+                  - canceled
+                  - is_safe
+                properties:
+                  cancelable:
+                    type: boolean
+                    description: Describes if the order is cancelable in the current state.
+                  canceled:
+                    type: boolean
+                    description: Describes if the order has been canceled.
+                  is_safe:
+                    type: boolean
+                    description: Describes if it is safe to cancel the order in the current state.
+              example:
+                cancelable: true
+                canceled: false
+                is_safe: true
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    description: Error code
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+        '404':
+          description: Order with given order ID does not exist
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - message
+                  - request_id
+                properties:
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+              example:
+                error_code: internal_server_error
+                message: Couldn't process request due to an internal error.
+                request_id: ec2f3c9bb016ba971bf6074098363
+  '/orders/{id}/_extend_grace_period':
+    post:
+      tags:
+        - Manage orders
+      summary: Update grace period
+      description: |
+        Use this method to extend the [grace period](/docs/glossary.html#term-grace-period) timer
+        for the specified order by **15 minutes**, if the grace period of the order has not yet expired.
+      operationId: extend_grace_period
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the order.
+        - in: query
+          name: id_type
+          required: true
+          schema:
+            type: string
+            enum:
+              - external
+              - internal
+          description: 'Type of the order id which should be used to extend the order grace period. Example "external" for human-readable indentifiers, and "internal" for system-generated UUIDs.'
+      responses:
+        '200':
+          description: The grace period got extended by 15 minutes.
+          content:
+            application/json:
+              schema:
+                title: Extend order's grace period timer
+                description: Response schema for the extend grace period timer includes the time when the grace period passes.
+                type: object
+                properties:
+                  due_at:
+                    description: The time when the grace period passes or null if there is no grace period.
+                    type: string
+                    format: date-time
+        '404':
+          description: Order with id and id type not found.
+          content:
+            application/json:
+              schema:
+                description: The error response.
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    minLength: 1
+                    description: The specific code of the error.
+                  message:
+                    type: string
+                    minLength: 1
+                    description: A message explaining the error.
+                  request_id:
+                    type: string
+                    minLength: 1
+                    description: 'The identifier of the request, which can be used for tracing.'
+        '409':
+          description: A concurrent request extended the grace period already.
+          content:
+            application/json:
+              schema:
+                description: The error response.
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    minLength: 1
+                    description: The specific code of the error.
+                  message:
+                    type: string
+                    minLength: 1
+                    description: A message explaining the error.
+                  request_id:
+                    type: string
+                    minLength: 1
+                    description: 'The identifier of the request, which can be used for tracing.'
+        '412':
+          description: The order is not in the grace period.
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              example:
+                error_code: internal_server_error
+                message: Couldn't process request due to an internal error.
+                request_id: ec2f3c9bb016ba971bf6074098363
+              schema:
+                description: The error response.
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    minLength: 1
+                    description: The specific code of the error.
+                  message:
+                    type: string
+                    minLength: 1
+                    description: A message explaining the error.
+                  request_id:
+                    type: string
+                    minLength: 1
+                    description: 'The identifier of the request, which can be used for tracing.'
+  '/orders/{uuid}/serial_numbers':
+    patch:
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 'The internal identifier of the order, for example, ``b604ffda-7e31-4338-beab-7f939a8c2322``.'
+      responses:
+        '204':
+          description: Serial numbers added.
+        '400':
+          description: Bad request Error.
+          content:
+            application/json:
+              examples:
+                JSON schema error:
+                  value:
+                    error_code: bad_request
+                    message: The number of products can't exceed 500.
+                    request_id: ec2f3c9bb016ba971bf6074098363
+                Sales Order item not found error:
+                  value:
+                    error_code: sales_order_item_not_found
+                    message: The sales order item with id ed668d62-c6ac-472f-9c72-24b12739142a cannot be found.
+                    request_id: ec2f3c9bb016ba971bf6074098363
+                Sales Order UUID not valid:
+                  value:
+                    error_code: bad_request
+                    message: The provided order id abcd is not a valid uuid.
+                    request_id: ec2f3c9bb016ba971bf6074098363
+              schema:
+                description: The error response.
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    minLength: 1
+                    description: The specific code of the error.
+                  message:
+                    type: string
+                    minLength: 1
+                    description: A message explaining the error.
+                  request_id:
+                    type: string
+                    minLength: 1
+                    description: 'The identifier of the request, which can be used for tracing.'
+        '404':
+          description: Not found Error.
+          content:
+            application/json:
+              example:
+                error_code: not_found
+                message: The order '57787cdb-3474-47b5-b3ec-7b776731309e' couldn't be found.
+                request_id: ec2f3c9bb016ba971bf6074098363
+              schema:
+                description: The error response.
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    minLength: 1
+                    description: The specific code of the error.
+                  message:
+                    type: string
+                    minLength: 1
+                    description: A message explaining the error.
+                  request_id:
+                    type: string
+                    minLength: 1
+                    description: 'The identifier of the request, which can be used for tracing.'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              example:
+                error_code: internal_server_error
+                message: Couldn't process request due to an internal error.
+                request_id: ec2f3c9bb016ba971bf6074098363
+              schema:
+                description: The error response.
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    minLength: 1
+                    description: The specific code of the error.
+                  message:
+                    type: string
+                    minLength: 1
+                    description: A message explaining the error.
+                  request_id:
+                    type: string
+                    minLength: 1
+                    description: 'The identifier of the request, which can be used for tracing.'
+      description: |
+        Use this method to add serial numbers to specified items of the order. Serial numbers will be overwritten in case
+        some or all of the items have already serial numbers attached.
+
+        The maximum number of items in this request cannot exceed **500**, otherwise this method will return a ``400`` error.
+      operationId: put-serial-numbers-for-items
+      summary: Add serial numbers to order items
+      tags:
+        - Manage orders
+      requestBody:
+        content:
+          application/json:
+            example:
+              items:
+                - id: 25802b6c-a66f-4f76-b6bc-f1305468fc12
+                  serial_number: SRQFAU79
+                - id: 5e3b112d-9cc8-4e5a-ac08-f45f0b8fa67f
+                  serial_number: LJTMF3FJ
+            schema:
+              description: The response for adding serial number information.
+              type: object
+              required:
+                - items
+              properties:
+                items:
+                  type: array
+                  minItems: 1
+                  maxItems: 500
+                  items:
+                    type: object
+                    required:
+                      - id
+                      - serial_number
+                    properties:
+                      id:
+                        type: string
+                        minLength: 36
+                        maxLength: 36
+                        description: The identifier of the order line item.
+                      serial_number:
+                        type: string
+                        description: The serial number which should be assigned to the specified order line item.
+        required: true
+  '/orders/{order_uuid}/items/{item_uuid}/cancel':
+    post:
+      tags:
+        - Cancel line items
+      summary: Cancel line items
+      description: |
+        Use this resource to cancel line items.
+
+        **Note:** 
+        1. This API currently only supports pre-ordered line items and will throw an error for other line items.
+        2. The line item can only be cancelled for non-terminal item statuses.
+      operationId: cancel_line_items
+      parameters:
+        - in: path
+          name: order_uuid
+          required: true
+          schema:
+            type: string
+          description: UUID of the order.
+        - in: path
+          name: item_uuid
+          required: true
+          schema:
+            type: string
+          description: UUID of the order item.
+        - in: query
+          name: id_type
+          required: true
+          schema:
+            type: string
+            enum:
+              - external
+              - internal
+          description: 'Type of order id which should be used for cancellation of line items. Example "external" for human-readable indentifiers, and "internal" for system-generated UUIDs.'
+      responses:
+        '200':
+          description: Successfully cancelled order item by UUID.
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - error_code
+                  - message
+                  - request_id
+                properties:
+                  error_code:
+                    type: string
+                    description: Error code
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+              examples:
+                bad_request_validation_failed:
+                  summary: Validation failed
+                  description: |
+                    Bad request because the request is not valid.
+                  value:
+                    error_code: bad_request
+                    message: 'Validation of cancel order request failed with error: ''reason'' is a required property.'
+                    request_id: ec2f3c9bb016ba971bf6074098363
+                item_not_cancelable_any_longer:
+                  summary: Order item is no longer cancelable.
+                  description: |
+                    Order item is no longer cancelable.
+                  value:
+                    error_code: item_not_cancelable_any_longer
+                    message: Item d6e7c7ea-e6f1-4259-9729-fb880d81bfc1 for order GD10001 cannot be cancelled any longer.
+                    request_id: ec2f3c9bb016ba971bf6074098363
+                not_preordered:
+                  summary: The Order item can't be canceled.
+                  description: |
+                    Cancellation for this item is not allowed because the item is not pre-ordered.
+                  value:
+                    error_code: not_preordered
+                    message: Item 57787cdb-3474-47b5-b3ec-7b776731309e is not pre-ordered.
+                    request_id: ec2f3c9bb016ba971bf6074098363
+        '404':
+          description: Order item with provided UUID was not found.
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                title: Internal error response while getting config
+                type: object
+                required:
+                  - message
+                  - request_id
+                properties:
+                  message:
+                    type: string
+                    description: A human readable description of the error
+                  request_id:
+                    type: string
+              example:
+                error_code: internal_server_error
+                message: Couldn't process request due to an internal error.
+                request_id: ec2f3c9bb016ba971bf6074098363
+

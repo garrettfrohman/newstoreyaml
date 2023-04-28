@@ -1,0 +1,492 @@
+openapi: 3.0.3
+info:
+  title: Receipts
+  description: |
+    Receipts API
+
+    A receipt is a financial document that is generated when a
+    purchase or return is made in the store. The receipt is handed
+    over to the customer right after the purchase or return.
+
+    NewStore generates three types of receipts, namely
+    sales, return, and exchange receipts. An order can have a single sales
+    or exchange receipt but might have multiple return receipts.
+
+    Use this API to:
+
+    * View receipts for a specific order
+
+    * View and download specific receipts in PDF format
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:8000'
+    description: localhost
+  - url: 'https://dodici.x.newstore.net/v2/c'
+    description: The sandbox server
+  - url: 'https://dodici.s.newstore.net/v2/c'
+    description: The staging server
+paths:
+  '/orders/{order_id}/receipts':
+    parameters:
+      - name: order_id
+        in: path
+        required: true
+        description: Order ID (UUID)
+        schema:
+          description: Universally unique identifier (UUID).
+          type: string
+          pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+          minLength: 36
+          maxLength: 36
+      - in: query
+        name: type
+        schema:
+          type: string
+          enum:
+            - sales
+            - exchange
+            - return
+        description: 'The type of receipts to return - sales, exchange or return receipts'
+    get:
+      summary: Get list of receipts for the order
+      description: |
+        This endpoint returs only a list of receipts.
+        To get the receipt, please use one of endpoints:
+
+        * JSON version: `/orders/{order_id}/receipts/{receipt_id}`
+
+        * PDF version: `/orders/{order_id}/receipts/{receipt_id}.pdf`
+      operationId: GetReceipts
+      security:
+        - newStoreAccessToken: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                description: List of receipts
+                type: array
+                items:
+                  description: Receipt info
+                  type: object
+                  properties:
+                    id:
+                      description: Receipt ID (UUID)
+                      type: string
+                      minLength: 36
+                      maxLength: 36
+                      example: a7c9f0f6-6eb9-4492-901b-b5cc8beb07b8
+                    type:
+                      description: Type of the receipt
+                      type: string
+                      enum:
+                        - sales
+                        - exchange
+                        - return
+                      example: return
+                    date:
+                      description: UTC date-time (RFC3339) when this receipt was created
+                      type: string
+                      example: '2006-01-02T15:04:05Z'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                description: Error message response
+                properties:
+                  error_code:
+                    description: Error code value.
+                    type: string
+                  message:
+                    description: Error message.
+                    type: string
+              example:
+                error_code: invalid_uuid
+                message: invalid order id
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                description: Error message response
+                properties:
+                  error_code:
+                    description: Error code value.
+                    type: string
+                  message:
+                    description: Error message.
+                    type: string
+              example:
+                error_code: unknown_error
+                message: database error
+  '/orders/{order_id}/receipts/{receipt_id}':
+    parameters:
+      - name: order_id
+        in: path
+        required: true
+        description: Order ID (UUID)
+        schema:
+          description: Universally unique identifier (UUID).
+          type: string
+          pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+          minLength: 36
+          maxLength: 36
+      - name: receipt_id
+        in: path
+        required: true
+        description: Receipt ID (UUID)
+        schema:
+          description: Universally unique identifier (UUID).
+          type: string
+          pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+          minLength: 36
+          maxLength: 36
+    get:
+      summary: Get receipt by id
+      operationId: GetReceipt
+      security:
+        - newStoreAccessToken: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                description: Extended receipt info
+                type: object
+                properties:
+                  id:
+                    description: Receipt ID (UUID)
+                    type: string
+                    minLength: 36
+                    maxLength: 36
+                    example: a7c9f0f6-6eb9-4492-901b-b5cc8beb07b8
+                  type:
+                    description: Type of the receipt
+                    type: string
+                    enum:
+                      - sales
+                      - exchange
+                      - return
+                    example: return
+                  date:
+                    description: UTC date-time (RFC3339) when this receipt was created
+                    type: string
+                    example: '2006-01-02T15:04:05Z'
+                  url:
+                    description: The permanent URL to get the PDF file with the receipt.
+                    type: string
+                    example: 'http://example.com/link'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                description: Error message response
+                properties:
+                  error_code:
+                    description: Error code value.
+                    type: string
+                  message:
+                    description: Error message.
+                    type: string
+              example:
+                error_code: invalid_uuid
+                message: invalid order id
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                description: Error message response
+                properties:
+                  error_code:
+                    description: Error code value.
+                    type: string
+                  message:
+                    description: Error message.
+                    type: string
+              example:
+                error_code: not_found
+                message: order not found
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                description: Error message response
+                properties:
+                  error_code:
+                    description: Error code value.
+                    type: string
+                  message:
+                    description: Error message.
+                    type: string
+              example:
+                error_code: unknown_error
+                message: database error
+  '/orders/{order_id}/receipts/{receipt_id}.pdf':
+    parameters:
+      - name: order_id
+        in: path
+        required: true
+        description: Order ID (UUID)
+        schema:
+          description: Universally unique identifier (UUID).
+          type: string
+          pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+          minLength: 36
+          maxLength: 36
+      - name: receipt_id
+        in: path
+        required: true
+        description: Receipt ID (UUID)
+        schema:
+          description: Universally unique identifier (UUID).
+          type: string
+          pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+          minLength: 36
+          maxLength: 36
+    get:
+      summary: Display PDF format of receipt by ID
+      description: |
+        Display expected PDF file for the receipt.
+        Internally implemented requirement about copy-receipt.
+      operationId: DisplayReceiptPDF
+      security:
+        - newStoreAccessToken: []
+      responses:
+        '302':
+          description: Successful temporary redirection to the original receipt
+          headers:
+            Location:
+              description: Redirect location to the PDF file
+              required: true
+              example: 'https://www.example.com/v0/d/documents/a7c9f0f6-6eb9-4492-901b-b5cc8beb07b8'
+              schema:
+                type: string
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                description: Error message response
+                properties:
+                  error_code:
+                    description: Error code value.
+                    type: string
+                  message:
+                    description: Error message.
+                    type: string
+              example:
+                error_code: invalid_uuid
+                message: invalid order id
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                description: Error message response
+                properties:
+                  error_code:
+                    description: Error code value.
+                    type: string
+                  message:
+                    description: Error message.
+                    type: string
+              example:
+                error_code: not_found
+                message: order not found
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                description: Error message response
+                properties:
+                  error_code:
+                    description: Error code value.
+                    type: string
+                  message:
+                    description: Error message.
+                    type: string
+              example:
+                error_code: unknown_error
+                message: database error
+components:
+  schemas:
+    GetReceiptsResponse:
+      description: List of receipts
+      type: array
+      items:
+        description: Receipt info
+        type: object
+        properties:
+          id:
+            description: Receipt ID (UUID)
+            type: string
+            minLength: 36
+            maxLength: 36
+            example: a7c9f0f6-6eb9-4492-901b-b5cc8beb07b8
+          type:
+            description: Type of the receipt
+            type: string
+            enum:
+              - sales
+              - exchange
+              - return
+            example: return
+          date:
+            description: UTC date-time (RFC3339) when this receipt was created
+            type: string
+            example: '2006-01-02T15:04:05Z'
+    GetReceiptResponse:
+      description: Extended receipt info
+      type: object
+      properties:
+        id:
+          description: Receipt ID (UUID)
+          type: string
+          minLength: 36
+          maxLength: 36
+          example: a7c9f0f6-6eb9-4492-901b-b5cc8beb07b8
+        type:
+          description: Type of the receipt
+          type: string
+          enum:
+            - sales
+            - exchange
+            - return
+          example: return
+        date:
+          description: UTC date-time (RFC3339) when this receipt was created
+          type: string
+          example: '2006-01-02T15:04:05Z'
+        url:
+          description: The permanent URL to get the PDF file with the receipt.
+          type: string
+          example: 'http://example.com/link'
+    Receipt:
+      description: Receipt info
+      type: object
+      properties:
+        id:
+          description: Receipt ID (UUID)
+          type: string
+          minLength: 36
+          maxLength: 36
+          example: a7c9f0f6-6eb9-4492-901b-b5cc8beb07b8
+        type:
+          description: Type of the receipt
+          type: string
+          enum:
+            - sales
+            - exchange
+            - return
+          example: return
+        date:
+          description: UTC date-time (RFC3339) when this receipt was created
+          type: string
+          example: '2006-01-02T15:04:05Z'
+    Error:
+      description: Error message response
+      properties:
+        error_code:
+          description: Error code value.
+          type: string
+        message:
+          description: Error message.
+          type: string
+    UUID:
+      description: Universally unique identifier (UUID).
+      type: string
+      pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+      minLength: 36
+      maxLength: 36
+  parameters:
+    order_id:
+      name: order_id
+      in: path
+      required: true
+      description: Order ID (UUID)
+      schema:
+        description: Universally unique identifier (UUID).
+        type: string
+        pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+        minLength: 36
+        maxLength: 36
+    receipt_id:
+      name: receipt_id
+      in: path
+      required: true
+      description: Receipt ID (UUID)
+      schema:
+        description: Universally unique identifier (UUID).
+        type: string
+        pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+        minLength: 36
+        maxLength: 36
+  responses:
+    '400':
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            description: Error message response
+            properties:
+              error_code:
+                description: Error code value.
+                type: string
+              message:
+                description: Error message.
+                type: string
+          example:
+            error_code: invalid_uuid
+            message: invalid order id
+    '404':
+      description: Not found
+      content:
+        application/json:
+          schema:
+            description: Error message response
+            properties:
+              error_code:
+                description: Error code value.
+                type: string
+              message:
+                description: Error message.
+                type: string
+          example:
+            error_code: not_found
+            message: order not found
+    '500':
+      description: Server error
+      content:
+        application/json:
+          schema:
+            description: Error message response
+            properties:
+              error_code:
+                description: Error code value.
+                type: string
+              message:
+                description: Error message.
+                type: string
+          example:
+            error_code: unknown_error
+            message: database error
+  headers:
+    Location:
+      description: Redirect location to the PDF file
+      required: true
+      example: 'https://www.example.com/v0/d/documents/a7c9f0f6-6eb9-4492-901b-b5cc8beb07b8'
+      schema:
+        type: string
+  securitySchemes:
+    newStoreAccessToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

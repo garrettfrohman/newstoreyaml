@@ -1,0 +1,243 @@
+components:
+  schemas:
+    DocumentsConfig:
+      example:
+        default:
+        - invoice
+        - packing_slip
+        - shipping_label
+        - return_label
+        in_store_pick_up:
+        - invoice
+        - in_store_pickup_label
+      properties:
+        default:
+          items:
+            type: string
+          title: Default
+          type: array
+        in_store_pick_up:
+          items:
+            type: string
+          title: In Store Pick Up
+          type: array
+      required:
+      - default
+      title: DocumentsConfig
+      type: object
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          title: Detail
+          type: array
+      title: HTTPValidationError
+      type: object
+    TenantConfig:
+      example:
+        stores:
+          store1:
+            default:
+            - invoice
+            - packing_slip
+            - shipping_label
+            in_store_pick_up:
+            - invoice
+            - in_store_pickup_label
+          store2:
+            default:
+            - invoice
+            - packing_slip
+            - shipping_label
+            in_store_pick_up:
+            - invoice
+        tenant:
+          default:
+          - invoice
+          - packing_slip
+          - shipping_label
+          - return_label
+          in_store_pick_up:
+          - invoice
+          - in_store_pickup_label
+      properties:
+        stores:
+          additionalProperties:
+            $ref: '#/components/schemas/DocumentsConfig'
+          title: Stores
+          type: object
+        tenant:
+          $ref: '#/components/schemas/DocumentsConfig'
+      required:
+      - tenant
+      - stores
+      title: TenantConfig
+      type: object
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          title: Location
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+      type: object
+info:
+  title: Documents Configuration
+  version: '1.0'
+openapi: 3.0.2
+paths:
+  /v0/store-fulfillment/config/documents-config:
+    get:
+      operationId: get_documents_configuration_v0_store_fulfillment_config_documents_config_get
+      parameters:
+      - in: query
+        name: application
+        required: false
+        schema:
+          title: Application
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantConfig'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Documents Configuration
+    put:
+      operationId: set_documents_configuration_v0_store_fulfillment_config_documents_config_put
+      parameters:
+      - in: query
+        name: application
+        required: false
+        schema:
+          title: Application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentsConfig'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentsConfig'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Set Documents Configuration
+  /v0/store-fulfillment/config/documents-config/store/{store_id}:
+    delete:
+      operationId: delete_store_documents_configuration_v0_store_fulfillment_config_documents_config_store__store_id__delete
+      parameters:
+      - in: path
+        name: store_id
+        required: true
+        schema:
+          title: Store Id
+          type: string
+      - in: query
+        name: application
+        required: false
+        schema:
+          title: Application
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Delete Store Documents Configuration
+    get:
+      operationId: get_store_documents_configuration_v0_store_fulfillment_config_documents_config_store__store_id__get
+      parameters:
+      - in: path
+        name: store_id
+        required: true
+        schema:
+          title: Store Id
+          type: string
+      - in: query
+        name: application
+        required: false
+        schema:
+          title: Application
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentsConfig'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Store Documents Configuration
+    put:
+      operationId: set_store_documents_configuration_v0_store_fulfillment_config_documents_config_store__store_id__put
+      parameters:
+      - in: path
+        name: store_id
+        required: true
+        schema:
+          title: Store Id
+          type: string
+      - in: query
+        name: application
+        required: false
+        schema:
+          title: Application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentsConfig'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentsConfig'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Set Store Documents Configuration

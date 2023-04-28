@@ -1,0 +1,225 @@
+openapi: 3.0.2
+info:
+  title: Inventory Manager
+  version: 0.0.0
+paths:
+  /v0/i/configuration:
+    get:
+      description: Retrieves the complete inventory configuration for the retailer.
+      operationId: get_configuration_v0_i_configuration_get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryManagerConfiguration"
+          description: Successful Response
+      summary: Get Configuration
+      tags:
+        - Retailer Configuration
+    patch:
+      description: Update the inventory configuration set up for the retailer.
+      operationId: patch_configuration_v0_i_configuration_patch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryManagerConfiguration"
+        required: true
+      responses:
+        "204":
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Patch Configuration
+      tags:
+        - Retailer Configuration
+    put:
+      description: Replace the inventory configuration set up for the retailer.
+      operationId: put_configuration_v0_i_configuration_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryManagerConfigurationRequired"
+        required: true
+      responses:
+        "204":
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Put Configuration
+      tags:
+        - Retailer Configuration
+components:
+  schemas:
+    InventoryManagerConfiguration:
+      example:
+        allow_asn_overreceiving: false
+        create_cycle_count_after_mispack: false
+        create_cycle_count_after_mispick: false
+        documents_to_print:
+          shipping_label:
+            printer_type: label_printer
+          transfer_packing_list:
+            printer_type: document_printer
+        documents_to_print_by_node:
+          fulfillment_node_id_1:
+            shipping_label:
+              printer_type: document_printer
+            transfer_packing_list:
+              printer_type: document_printer
+      properties:
+        allow_asn_overreceiving:
+          default: true
+          description: If it is true, allow to receive more items than specified in ASN. Default is true.
+          title: Allow Asn Overreceiving
+          type: boolean
+        create_cycle_count_after_mispack:
+          default: false
+          description: If it is true, create cycle count transaction after mispacked fulfillment logistic order.
+          title: Create Cycle Count After Mispack
+          type: boolean
+        create_cycle_count_after_mispick:
+          default: false
+          description: If it is true, create cycle count transaction after mispicked fulfillment logistic order.
+          title: Create Cycle Count After Mispick
+          type: boolean
+        documents_to_print:
+          allOf:
+            - $ref: "#/components/schemas/DocumentsToPrintConfiguration"
+          default:
+            shipping_label:
+              printer_type: label_printer
+            transfer_packing_list:
+              printer_type: document_printer
+          description: Configuration of documents to print by type.
+          title: Documents To Print
+          type: object
+        documents_to_print_by_node:
+          additionalProperties:
+            $ref: "#/components/schemas/DocumentsToPrintConfiguration"
+          default: {}
+          description: Configuration of documents to print by fulfillment node.
+          title: Documents To Print By Node
+          type: object
+      title: InventoryManagerConfiguration
+      type: object
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: "#/components/schemas/ValidationError"
+          title: Detail
+          type: array
+      title: HTTPValidationError
+      type: object
+    InventoryManagerConfigurationRequired:
+      example:
+        allow_asn_overreceiving: false
+        create_cycle_count_after_mispack: false
+        create_cycle_count_after_mispick: false
+        documents_to_print:
+          shipping_label:
+            printer_type: label_printer
+          transfer_packing_list:
+            printer_type: document_printer
+        documents_to_print_by_node:
+          fulfillment_node_id_1:
+            shipping_label:
+              printer_type: document_printer
+            transfer_packing_list:
+              printer_type: document_printer
+      properties:
+        allow_asn_overreceiving:
+          title: Allow Asn Overreceiving
+          type: boolean
+        create_cycle_count_after_mispack:
+          title: Create Cycle Count After Mispack
+          type: boolean
+        create_cycle_count_after_mispick:
+          title: Create Cycle Count After Mispick
+          type: boolean
+        documents_to_print:
+          $ref: "#/components/schemas/DocumentsToPrintConfiguration"
+        documents_to_print_by_node:
+          additionalProperties:
+            $ref: "#/components/schemas/DocumentsToPrintConfiguration"
+          default: {}
+          description: Configuration of documents to print by fulfillment node.
+          title: Documents To Print By Node
+          type: object
+      required:
+        - create_cycle_count_after_mispack
+        - allow_asn_overreceiving
+        - create_cycle_count_after_mispick
+        - documents_to_print
+      title: InventoryManagerConfigurationRequired
+      type: object
+    DocumentsToPrintConfiguration:
+      properties:
+        shipping_label:
+          allOf:
+            - $ref: "#/components/schemas/DocumentConfiguration"
+          default:
+            printer_type: label_printer
+          description: Shipping label printing configuration.
+          title: Shipping Label
+          type: object
+        transfer_packing_list:
+          allOf:
+            - $ref: "#/components/schemas/DocumentConfiguration"
+          default:
+            printer_type: document_printer
+          description: Transfer packing list printing configuration.
+          title: Transfer Packing List
+          type: object
+      title: DocumentsToPrintConfiguration
+      type: object
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          title: Location
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+        - loc
+        - msg
+        - type
+      title: ValidationError
+      type: object
+    DocumentConfiguration:
+      properties:
+        printer_type:
+          allOf:
+            - $ref: "#/components/schemas/PrinterType"
+          default: document_printer
+          description: Printer type for this document.
+          type: string
+      title: DocumentConfiguration
+      type: object
+    PrinterType:
+      description: An enumeration.
+      enum:
+        - document_printer
+        - label_printer
+        - <class 'inventory_manager.inventory.models.PrinterType.Config'>
+      title: PrinterType
+      type: string

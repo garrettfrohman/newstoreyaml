@@ -1,0 +1,944 @@
+openapi: 3.1.0
+info:
+  title: Associate App Configuration API
+  description: >
+    Use this API to retrieve and update the current configuration for Associate
+    App set up
+
+    for your business.
+
+
+    Use this API to enable or disable features such as [offline
+    mode](/docs/development/configuration/co0nfig-aa-offline-mode.html#config-aa-offline-mode),
+
+    [payment and refund
+    options](/docs/development/configuration/config-refund-options.html#config-refund-options),
+
+    [commerce
+    components](/docs/development/configuration/config-aa-commerce-components.html#config-aa-commerce-components)
+
+    in the app, etc. You can also use the API to update general
+
+    [UI
+    settings](/docs/development/configuration/config-aa-ui-settings.html#config-aa-ui-settings)
+
+    of the app.
+
+
+    For more information, see Associate App [configuration
+    guides](/docs/development/configuration/config-overview.html).
+  version: v1
+servers:
+  - url: https://dodici.x.newstore.net/api/v1/associate-app
+tags:
+  - name: Associate App retailer configuration
+    description: |
+      Configure Associate App globally across all stores in your business.
+  - name: Associate App store configuration
+    description: |
+      Configure Associate App for specific stores for your business.
+paths:
+  /config:
+    get:
+      tags:
+        - Associate App retailer configuration
+      operationId: getConfig
+      description: >
+        Returns the current configuration for Associate App in your business.
+
+
+        **Important**: For more information on the schema properties and how to
+        use them to configure
+
+        the app, see the
+        [guide](/docs/development/configuration/config-overview.html).
+      summary: Get Associate App configuration
+      security: []
+      responses:
+        '200':
+          description: Tenant-specific configuration for the Associate App.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/configSchema'
+        '422':
+          description: Configuration file is not readable.
+    put:
+      tags:
+        - Associate App retailer configuration
+      operationId: putConfig
+      description: >
+        Updates and replaces the current configuration values for Associate App
+        in
+
+        your business.
+
+
+        **Important**: Before you use this method to update or replace Associate
+        App
+
+        configuration, see the
+        [guide](/docs/development/configuration/config-overview.html) for
+
+        instructions.
+
+
+        **Note**: If no previous configuration for the app existed, use this
+        method to create a
+
+        new configuration for the app.
+
+
+        <Admonition type="important">If you have specified a store specific
+        Associate App configuration in your business, the store configuration
+        takes precedence over the global configuration for the app.</Admonition>
+      summary: Update Associate App configuration
+      security:
+        - newStoreAccessToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/configSchema'
+      responses:
+        '200':
+          description: Returns the new value of the configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/configSchema'
+        '400':
+          description: Invalid JSON. Received configuration could not properly parsed.
+        '422':
+          description: >-
+            Invalid schema. Received configuration is not valid against the
+            configuration schema.
+    patch:
+      tags:
+        - Associate App retailer configuration
+      operationId: patchConfig
+      description: >
+        Updates the current configuration values for Associate App in
+
+        your business.
+
+
+        **Important**: Before you use this method to update or replace Associate
+        App
+
+        configuration, see the
+        [guide](/docs/development/configuration/config-overview.html) for
+
+        instructions.
+      summary: Update Associate App configuration
+      security:
+        - newStoreAccessToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/configSchema'
+      responses:
+        '200':
+          description: Returns the new value of the configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/configSchema'
+        '400':
+          description: Invalid JSON. Received configuration could not properly parsed.
+        '422':
+          description: >-
+            Invalid schema. Received configuration is not valid against the
+            configuration schema.
+  /config/{$storeId}:
+    get:
+      tags:
+        - Associate App store configuration
+      operationId: getStoreConfig
+      description: >
+        Returns the current store configuration for Associate App in your
+        business.
+
+
+        **Important**: For more information on the schema properties and how to
+        use them to configure
+
+        the app, see the
+        [guide](/docs/development/configuration/config-overview.html).
+      summary: Get Associate App configuration for the given store.
+      security: []
+      responses:
+        '200':
+          description: Store-specific configuration for the Associate App.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/configSchema'
+        '422':
+          description: Configuration file is not readable.
+    put:
+      tags:
+        - Associate App store configuration
+      operationId: putStoreConfig
+      description: >
+        Updates and replaces the current store configuration values for
+        Associate App in
+
+        your business.
+
+
+        **Important**: Before you use this method to update or replace Associate
+        App
+
+        configuration, see the
+        [guide](/docs/development/configuration/config-overview.html) for
+
+        instructions.
+      summary: Update Associate App configuration
+      security:
+        - newStoreAccessToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/configSchema'
+      responses:
+        '200':
+          description: Returns the new value of the configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/configSchema'
+        '400':
+          description: Invalid JSON. Received configuration could not properly parsed.
+        '422':
+          description: >-
+            Invalid schema. Received configuration is not valid against the
+            configuration schema.
+    patch:
+      tags:
+        - Associate App store configuration
+      operationId: patchStoreConfig
+      description: >
+        Updates the current configuration values for Associate App in your
+        business.
+
+
+        **Important**: Before you use this method to update or replace the
+        Associate App
+
+        configuration, see the
+        [guide](/docs/development/configuration/config-overview.html) for
+
+        instructions.
+      summary: Update Associate App configuration for the given store.
+      security:
+        - newStoreAccessToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/configSchema'
+      responses:
+        '200':
+          description: Returns the new value of the configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/configSchema'
+        '400':
+          description: Invalid JSON. Received configuration could not properly parsed.
+        '422':
+          description: >-
+            Invalid schema. Received configuration is not valid against the
+            configuration schema.
+    delete:
+      tags:
+        - Associate App store configuration
+      operationId: deleteStoreConfig
+      description: >
+        Deletes the configuration for Associate App that has been currently
+        specified for the store.
+
+
+        <Admonition type="important">If you have specified a global Associate
+        App configuration for your business, the global configuration is set for
+        the store once you delete the store-specific app
+        configuration.</Admonition>
+      summary: Deletes Associate App configuration for the given store.
+      security:
+        - newStoreAccessToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/configSchema'
+      responses:
+        '200':
+          description: Deletes the configuration for the given store.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/configSchema'
+        '422':
+          description: An error has occurred.
+components:
+  securitySchemes:
+    newStoreAccessToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    configSchema:
+      type: object
+      required:
+        - commerce_components
+        - return_process_configuration
+      additionalProperties: false
+      minProperties: 1
+      if:
+        properties:
+          ui_configurations:
+            properties:
+              hide_selling:
+                const: true
+      then:
+        properties:
+          release_toggles:
+            properties:
+              drawer_navigation:
+                const: true
+      properties:
+        capabilities:
+          type: object
+          additionalProperties: false
+          if:
+            properties:
+              offline_mode_catalog_backup:
+                const: true
+            required:
+              - offline_mode_catalog_backup
+          then:
+            properties:
+              offline_mode:
+                const: true
+            required:
+              - offline_mode
+          properties:
+            cash_for_endless_aisle_orders_enabled:
+              type: boolean
+              description: >-
+                Toggle for enabling cash as a payment method for endless aisle
+                orders.
+            cash_management:
+              type: boolean
+              description: >-
+                Toggle for enabling cash management in the App. Enabling this
+                will show the `Cash Management` menu entry in the more menu.
+            mixed_cart:
+              type: boolean
+              description: >-
+                Toggle to enable mixed cart. More information can be found in
+                the documentation.
+            offline_mode:
+              type: boolean
+              description: >-
+                Toggle to enable offline mode. More information can be found in
+                the documentation.
+            offline_mode_catalog_backup:
+              type: boolean
+              description: >-
+                Toggle for storing an offline catalog on the device to be used
+                in the offline mode. In order to enabling
+                offline_mode_catalog_backup, offline_mode must also be enabled.
+            serialized_inventory:
+              type: object
+              required:
+                - serial_number_regex
+              description: >-
+                Configuration object for Serialized Inventory.
+                serial_number_regex need to be set.
+              properties:
+                serial_number_regex:
+                  type: string
+                  description: >-
+                    This regex will be used to identify a Serial Number for
+                    serialized products.
+            printer_management:
+              type: object
+              properties:
+                air_print:
+                  type: boolean
+                  description: >-
+                    Toggle for using only AirPrint printers. Note: No other
+                    printer option will be available.
+                star_print_resolution:
+                  type: number
+                  description: >-
+                    Resolution for printing on star printers using the new
+                    printing management framework. 203DPI is the printer
+                    resolution. For compatibility reasons, it will fallback to
+                    200DPI if not set.
+            qualaroo_user_nps_survey:
+              type: object
+              properties:
+                alias:
+                  description: >-
+                    The id for the Qualaroo survey that the user NPS will be
+                    pointing to. Can be found in Qualaroo.
+                  type: string
+                enabled:
+                  description: Toggle to enable the Qualaroo user NPS survey.
+                  type: boolean
+            qualaroo_manual_app_restart_feedback:
+              type: object
+              properties:
+                alias:
+                  description: >-
+                    The id for the Qualaroo manual app restart feedback survey.
+                    Can be found in Qualaroo.
+                  type: string
+                enabled:
+                  description: Toggle to enable the Qualaroo manual app restart feedback.
+                  type: boolean
+            qualaroo_associate_sff_survey:
+              type: object
+              properties:
+                alias:
+                  description: >-
+                    The alias for the Qualaroo Store Fulfilment User Effort
+                    survey. Can be found in Qualaroo.
+                  type: string
+                enabled:
+                  description: >-
+                    Toggle to enable the Qualaroo Store Fulfilment User Effort
+                    survey.
+                  type: boolean
+            cash_drawer_static_ip_enabled:
+              type: boolean
+              description: >-
+                Toggle to keep static IPs when pairing a cash drawer, instead of
+                DHCP.
+        commerce_components:
+          type: object
+          required:
+            - barcode_types
+            - document_printer_types
+          additionalProperties: false
+          properties:
+            barcode_types:
+              type: array
+              description: >-
+                Enter the barcode types you want to scan. Alternatively, use
+                `CodeTypeAll` to allow all barcode types.
+              minItems: 1
+              uniqueItems: true
+              items:
+                oneOf:
+                  - type: string
+                    enum:
+                      - CodeTypeAll
+                  - anyOf:
+                      - type: string
+                        enum:
+                          - QR
+                          - Databar
+                          - DatabarExtended
+                          - EAN8
+                          - EAN13
+                          - UPCA
+                          - UPCE
+                          - DataMatrix
+                          - Code39
+                          - Code93
+                          - Code128
+                          - PDF417
+                          - Interleaved2of5
+            document_printer_types:
+              type: object
+              description: >-
+                Set up the printer type which will be used for printing a
+                document. Alternatively, set up a default printer for all
+                documents. This configuration is only necessary when using the
+                legacy printing framework.
+              additionalProperties: false
+              properties:
+                sales_receipt:
+                  type: string
+                  description: Specifies the printer type for a sales receipt.
+                  enum:
+                    - labelPrinter
+                    - documentPrinter
+                refund_note:
+                  type: string
+                  description: Specifies the printer type for a refund note.
+                  enum:
+                    - labelPrinter
+                    - documentPrinter
+                shipping_label:
+                  type: string
+                  description: Specifies the printer type for a shipping label.
+                  enum:
+                    - labelPrinter
+                    - documentPrinter
+                packing_slip:
+                  type: string
+                  description: Specifies the printer type for a packing slip.
+                  enum:
+                    - labelPrinter
+                    - documentPrinter
+                invoice:
+                  type: string
+                  description: Specifies the printer type for an invoice.
+                  enum:
+                    - labelPrinter
+                    - documentPrinter
+                exchange_receipt:
+                  type: string
+                  description: Specifies the printer type for an exchange receipt.
+                  enum:
+                    - labelPrinter
+                    - documentPrinter
+                return_receipt:
+                  type: string
+                  description: Specifies the printer type for a return receipt.
+                  enum:
+                    - labelPrinter
+                    - documentPrinter
+                default:
+                  type: string
+                  description: >-
+                    Specifies the printer type for all not configured types of
+                    documents.
+                  enum:
+                    - labelPrinter
+                    - documentPrinter
+            gift_card_product_id:
+              type: string
+              description: The ID of the gift card product.
+            gift_card_regexp:
+              type: string
+              description: Regex to identify a gift card.
+            template_render_lambda_url:
+              type: string
+              description: The URL for the lambda, which will render the Gift Receipt.
+            warranty_lambda_url:
+              type: string
+              description: >-
+                The URL for fetching Warranty information for a product. More
+                information can be found in the documentation.
+            mto_configurator:
+              type: object
+              additionalProperties: false
+              properties:
+                base_url:
+                  type: string
+                  description: The base URL for  MTO configurator endpoints.
+                mto_identifier:
+                  type: string
+                  description: >-
+                    Identifier for customizable products that are available for
+                    sale.
+                repair_identifier:
+                  type: string
+                  description: Identifier for customizable items brought in for repair.
+                extended_attribute_name:
+                  type: string
+                  description: >-
+                    Extended attribute name used to identify the customizable
+                    products.
+        return_process_configuration:
+          type: object
+          required:
+            - blind_return_enabled
+          additionalProperties: false
+          properties:
+            blind_return_enabled:
+              type: boolean
+              description: Toggle for enabling blind returns in the order activity screens.
+            quality_inspection_options:
+              type: array
+              description: >-
+                List of quality inspection options, which are listed and can be
+                selected during the return process.
+              items:
+                type: object
+                description: >-
+                  A single quality inspection option. Consists of a code
+                  (integer) and a text.
+                properties:
+                  code:
+                    type: number
+                  option:
+                    type: string
+            return_reasons:
+              type: array
+              description: >-
+                DEPRECATED. List of return reasons, which are listed and can be
+                selected during the return process. Create return reasons via
+                NOM instead.
+              items:
+                type: object
+                description: >-
+                  A single return reason. Consists of a code (integer) and a
+                  text.
+                properties:
+                  code:
+                    type: number
+                  reason:
+                    type: string
+                  reasons:
+                    type: object
+                    additionalProperties: false
+                    patternProperties:
+                      ^[a-z]{2}$:
+                        type: string
+        ui_configurations:
+          type: object
+          additionalProperties: false
+          properties:
+            display_product_identifier:
+              type: string
+              description: >-
+                Specifies whether to show the product identifier or SKU on the
+                product detail page.
+              enum:
+                - product_id
+                - sku
+            seconds_until_logout_on_inactivity:
+              type: number
+              description: >-
+                The number of seconds which are needed to trigger an auto logout
+                after the App was closed or put into background. Use `0` for
+                logout on every app close.
+            show_preorders_filter:
+              type: boolean
+              description: >-
+                Toggle to enable a tile which filters products that are
+                available for pre-order in the current store's catalog.
+            suggested_email_domains:
+              type: array
+              description: Domain suggestions for email address autocompletion.
+              items:
+                type: string
+            tax_exemption_enabled:
+              type: boolean
+              description: >-
+                Toggle for enabling a possible tax exemption at the cart. Tax
+                exemptions need to be done by the associate.
+            use_new_om_ui:
+              type: boolean
+              description: >-
+                Toggle for enabling a new UI for the Order History of the app.
+                The new UI is required for connections to an external OMS.
+            hide_selling:
+              type: boolean
+              description: >-
+                Toggle to hide the whole selling section in the app. The menu
+                will not show `Selling` and after login the user will be
+                redirected to the Store Fulfillment section. `drawer_navigation`
+                needs to be activated. Defaults to `false`.
+            logo:
+              type: string
+              description: >-
+                The logo as a base64-encoded PNG or JPG, which will be shown on
+                the login screen. Maximum image size is 2KB.
+              contentEncoding: base64
+              pattern: >-
+                ^data:image/(?:png)(?:;charset=utf-8)?;base64,(?:[A-Za-z0-9]|[+/])+={0,2}
+        customizations:
+          type: object
+          additionalProperties: false
+          properties:
+            hang_tag_printing_enabled:
+              type: boolean
+              description: >-
+                Toggle to enable hang tag printing on the Product Detail Page.
+                Only works with Zebra Printers.
+            gift_card_pin:
+              type: boolean
+              description: >-
+                Toggle to specify if PINs are required for gift card
+                validations.
+            gift_receipt_printing_enabled:
+              type: boolean
+              description: >-
+                Toggle to enable gift card printing after order placement and on
+                a order history screen.
+            membership_customers_enabled:
+              type: boolean
+              description: >-
+                Toggle to enable special prices from membership pricebooks for
+                loyalty customers in the app. Requires a separate pricebook to
+                be set up. Check documentation for further details.
+            stage_switch_enabled:
+              type: boolean
+              description: >-
+                Toggle to enable switching between a production and a test
+                (staging) tenant. Needs to be additionally configured on the
+                MDM.
+            cart_management:
+              type: array
+              description: The list of supported cart management plugins.
+              uniqueItems: true
+              items:
+                type: string
+                enum:
+                  - orderDiscount
+                  - itemDiscount
+                  - automaticDiscount
+                  - coupon
+                  - addDelivery
+                  - addGiftMessage
+            customization_framework:
+              type: object
+              additionalProperties: false
+              properties:
+                customer_extended_attributes:
+                  type: boolean
+                  description: >-
+                    Toggle to enable the usage of extended attributes for
+                    customers. Requires to be further configured in NOM.
+            email_opt_in:
+              type: object
+              additionalProperties: false
+              properties:
+                privacy_policy_url:
+                  type: string
+                  description: >-
+                    URL pointing to the Privacy Policy. The URL will be
+                    accessible from the Customer Profile detail view.
+            newstore_checkout_button_share_configuration:
+              type: array
+              description: >-
+                The list of supported share methods for the NewStore checkout
+                link.
+              uniqueItems: true
+              items:
+                type: string
+                enum:
+                  - SMS
+                  - EMAIL
+                  - CLIPBOARD
+            disabled_contact_buttons:
+              type: array
+              description: >-
+                The list of supported contact buttons to be disabled on the
+                customer profile view.
+              uniqueItems: true
+              items:
+                type: string
+                enum:
+                  - CALL
+                  - MAIL
+                  - SMS
+            editable_extended_attributes:
+              type: object
+              additionalProperties: false
+              properties:
+                order:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - attribute_name
+                      - label
+                      - prompt
+                      - keyboard_type
+                    properties:
+                      attribute_name:
+                        type: string
+                      validationRegex:
+                        type: string
+                      label:
+                        type: object
+                        required:
+                          - en
+                        patternProperties:
+                          en|de|es|fr|it|ja|ko|zh:
+                            type: string
+                      prompt:
+                        type: object
+                        required:
+                          - en
+                        patternProperties:
+                          en|de|es|fr|it|ja|ko|zh:
+                            type: string
+                      error_mesage:
+                        type: object
+                        required:
+                          - en
+                        patternProperties:
+                          en|de|es|fr|it|ja|ko|zh:
+                            type: string
+                      keyboard_type:
+                        type: string
+                        enum:
+                          - default
+                          - email-address
+                          - phone-pad
+                          - decimal-pad
+                          - ascii-capable
+                          - url
+                          - twitter
+                item:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - attribute_name
+                      - label
+                      - prompt
+                      - keyboard_type
+                    properties:
+                      attribute_name:
+                        type: string
+                      validationRegex:
+                        type: string
+                      label:
+                        type: object
+                        required:
+                          - en
+                        patternProperties:
+                          en|de|es|fr|it|ja|ko|zh:
+                            type: string
+                      prompt:
+                        type: object
+                        required:
+                          - en
+                        patternProperties:
+                          en|de|es|fr|it|ja|ko|zh:
+                            type: string
+                      error_mesage:
+                        type: object
+                        required:
+                          - en
+                        patternProperties:
+                          en|de|es|fr|it|ja|ko|zh:
+                            type: string
+                      keyboard_type:
+                        type: string
+                        enum:
+                          - default
+                          - email-address
+                          - phone-pad
+                          - decimal-pad
+                          - ascii-capable
+                          - url
+                          - twitter
+                      sibling:
+                        type: string
+            displayed_extended_attributes:
+              type: object
+              properties:
+                product_detail:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      attribute_name:
+                        type: string
+                      label:
+                        type: object
+                        required:
+                          - en
+                        patternProperties:
+                          en|de|es|fr|it|ja|ko|zh:
+                            type: string
+            customer_identifier:
+              type: object
+              required:
+                - scanner_code_type
+                - regex
+                - extended_attribute_field
+              properties:
+                scanner_code_type:
+                  type: number
+                regex:
+                  type: string
+                extended_attribute_field:
+                  type: string
+        release_toggles:
+          type: object
+          additionalProperties: false
+          properties:
+            allow_multipackage_packing:
+              type: boolean
+              description: Toggle to split an order in multiple boxes during fulfillment.
+            bluetooth_scanner_enabled:
+              type: boolean
+              description: >-
+                Toggle to enable the use of Bluetooth Barcode scanner while
+                using any scanning view.
+            catalog_product_quantity_picker:
+              type: boolean
+              description: >-
+                Toggle to show a quantity picker to add multiple number of the
+                same product to the cart.
+            cloud_translations:
+              type: boolean
+              description: >-
+                Toggle to enable cloud translations that can be managed
+                independent of Associate App releases.
+            drawer_navigation:
+              type: boolean
+              description: >-
+                Toggles the drawer in the Associate App. When the drawer is
+                enabled, some business flows are moved from the `More` menu into
+                the drawer.
+            fiscal_printer_management_enabled:
+              type: boolean
+              description: >-
+                Toggle to enable fiscal printers. This is specifically required
+                when operating stores in fiscalized countries.
+            new_customer_profile:
+              type: boolean
+              description: >-
+                Toggle to enable the new UI in the customer profile flow. The
+                new UI is required for PII data protection.
+            new_gift_card_overview:
+              type: boolean
+              description: >-
+                Toggle to enable the new giftcard overview. This is the starting
+                point for cashouts if eanbled in payment options. Further
+                information can be found in the documentation.
+            new_printer_management:
+              type: boolean
+              description: >-
+                Toggle to enable the a new printing flow. Further information
+                can be found in the documentation.
+            new_cash_management:
+              type: boolean
+              description: Toggle to enable the a new cash management flow.
+            use_data_scanner_view_controller:
+              type: boolean
+              description: >-
+                Toggle for enabling the DataScannerViewController. Further
+                information can be found here:
+                https://developer.apple.com/documentation/visionkit/datascannerviewcontroller
+        external_integration:
+          type: object
+          additionalProperties: false
+          properties:
+            post_login_callback_url:
+              type: string
+              description: >-
+                HTTP callback url which is called after login. The URL is called
+                with the NewStore authToken and expects to receive external
+                identifier information to share with 3rd Party integrations.
+            cart.more.loyaltyProgram:
+              type: object
+              additionalProperties: false
+              properties:
+                url:
+                  type: string
+                  description: >-
+                    The URL for a customised loyalty program. It will enable a
+                    link in the Menu and show additional customer information.
+                is_deeplink:
+                  type: boolean
+                  description: >-
+                    Toggle to choose if the provided URL is a deeplink to
+                    another application or an URL to be opened in an In-App
+                    browser.
